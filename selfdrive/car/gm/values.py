@@ -46,6 +46,11 @@ class CarControllerParams:
       # Camera transitions to MAX_ACC_REGEN from ZERO_GAS and uses friction brakes instantly
       max_regen_acceleration = 0.
 
+    elif CP.carFingerprint in BCM_CAR:
+      self.MAX_GAS = 3400
+      self.MAX_ACC_REGEN = 1514
+      self.INACTIVE_REGEN = 1554
+
     else:
       self.MAX_GAS = 3072  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
       self.MAX_ACC_REGEN = 1404  # Max ACC regen is slightly less than max paddle regen
@@ -75,6 +80,7 @@ class CAR:
   SILVERADO = "CHEVROLET SILVERADO 1500 2020"
   EQUINOX = "CHEVROLET EQUINOX 2019"
   TRAILBLAZER = "CHEVROLET TRAILBLAZER 2021"
+  XT4 = "CADILLAC XT4 2023"
 
 
 class Footnote(Enum):
@@ -116,6 +122,7 @@ CAR_INFO: Dict[str, Union[GMCarInfo, List[GMCarInfo]]] = {
   ],
   CAR.EQUINOX: GMCarInfo("Chevrolet Equinox 2019-22"),
   CAR.TRAILBLAZER: GMCarInfo("Chevrolet Trailblazer 2021-22"),
+  CAR.XT4: GMCarInfo("CADILLAC XT4 2023", "Driver Assist Package"),
 }
 
 
@@ -216,6 +223,11 @@ FINGERPRINTS = {
   # {
   #   190: 6, 193: 8, 197: 8, 201: 8, 209: 7, 211: 2, 241: 6, 249: 8, 288: 5, 289: 8, 298: 8, 304: 3, 309: 8, 311: 8, 313: 8, 320: 4, 328: 1, 352: 5, 381: 8, 384: 4, 386: 8, 388: 8, 413: 8, 451: 8, 452: 8, 453: 6, 455: 7, 479: 3, 481: 7, 485: 8, 489: 8, 497: 8, 500: 6, 501: 8, 532: 6, 560: 8, 562: 8, 563: 5, 565: 5, 587: 8, 707: 8, 715: 8, 717: 5, 761: 7, 789: 5, 800: 6, 810: 8, 840: 5, 842: 5, 844: 8, 869: 4, 880: 6, 977: 8, 1001: 8, 1011: 6, 1017: 8, 1020: 8, 1217: 8, 1221: 5, 1233: 8, 1249: 8, 1259: 8, 1261: 7, 1263: 4, 1265: 8, 1267: 1, 1271: 8, 1280: 4, 1296: 4, 1300: 8, 1609: 8, 1611: 8, 1613: 8, 1649: 8, 1792: 8, 1798: 8, 1824: 8, 1825: 8, 1840: 8, 1842: 8, 1858: 8, 1860: 8, 1863: 8, 1872: 8, 1875: 8, 1882: 8, 1888: 8, 1889: 8, 1892: 8, 1930: 7, 1937: 8, 1953: 8, 1968: 8, 2001: 8, 2017: 8, 2018: 8, 2020: 8
   # }],
+  CAR.XT4: [
+  # Cadillac XT4 w/ ACC 2023
+  {
+    393: 7, 209: 7, 407: 7, 489: 8, 413: 8, 844: 8, 384: 4, 422: 4, 431: 8, 501: 8, 1033: 7, 241: 6, 1034: 7, 485: 8, 1296: 4, 481: 7, 193: 8, 197: 8, 840: 5, 842: 5, 1105: 5, 190: 6, 201: 8, 211: 2, 398 : 8, 401: 8, 455: 7, 562: 8, 199: 4, 249: 8, 715: 8, 717: 5, 869: 4, 880: 6, 353: 3, 417: 7, 419: 1, 426: 7, 442: 8, 451: 8, 452: 8, 453: 6, 479: 3, 497: 8, 500 : 6, 503: 2, 508: 8, 647: 6, 761: 7, 872: 1, 499: 3, 289: 8, 969: 8, 560: 8, 719 : 5, 352: 5, 532: 6, 866: 4, 298: 8, 567: 5, 707: 8, 309: 8, 388: 8, 292: 2, 975 : 2, 313: 8, 368: 3, 1005: 6, 608: 8, 609: 6, 610: 6, 611: 6, 612: 8, 613: 8, 386: 8, 322: 7, 381: 8, 554: 3, 564: 5, 961: 8, 977: 8, 979: 8, 985: 5, 1001: 8, 1011: 6, 1017: 8, 1020: 8, 1930: 7, 1009: 8, 1221: 5, 1013: 5, 1225: 7, 1273: 3, 806: 1, 1217: 8, 1223: 2, 1233: 8, 1259: 8, 1417: 8, 1236: 8, 1277: 7, 1279: 4, 288: 5, 304: 3, 320: 4, 1195: 3, 1919: 7, 328: 1, 1912: 7, 1249: 8, 1257: 6, 1300: 8, 1322: 6, 1323: 4, 1328: 4, 1280: 4, 1907: 7, 331: 3, 1187: 5, 1261: 7, 1263: 4, 1265: 8, 1267: 1, 1268: 2, 1276: 2, 1278: 4, 1906: 7, 573: 1, 563: 5, 565: 5
+  }],
 }
 
 GM_RX_OFFSET = 0x400
@@ -226,5 +238,8 @@ EV_CAR = {CAR.VOLT, CAR.BOLT_EUV}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.SILVERADO, CAR.EQUINOX, CAR.TRAILBLAZER}
+
+# We're integrated at the BCM on these cars
+BCM_CAR = {CAR.XT4}
 
 STEER_THRESHOLD = 1.0

@@ -6,7 +6,7 @@ from panda import Panda
 from openpilot.common.conversions import Conversions as CV
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.gm.radar_interface import RADAR_HEADER_MSG
-from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus
+from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, BCM_CAR, CanBus
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD
 from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
 
@@ -104,6 +104,15 @@ class CarInterface(CarInterfaceBase):
         ret.pcmCruise = False
         ret.openpilotLongitudinalControl = True
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_LONG
+
+    elif candidate in BCM_CAR:
+        ret.experimentalLongitudinalAvailable = False
+        ret.networkLocation = NetworkLocation.bcm
+        ret.radarUnavailable = True  # no radar
+        ret.pcmCruise = True
+        ret.radarUnavailable = True
+        ret.minEnableSpeed = 18 * CV.KPH_TO_MS
+        ret.minSteerSpeed = 7 * CV.KPH_TO_MS
 
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
@@ -246,6 +255,14 @@ class CarInterface(CarInterfaceBase):
       ret.tireStiffnessFactor = 1.0
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
+    elif candidate == CAR.XT4:
+      ret.mass = 3660. * CV.LB_TO_KG
+      ret.wheelbase = 2.78
+      ret.steerRatio = 14.4
+      ret.centerToFront = ret.wheelbase * 0.4
+      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
 
     return ret
 
