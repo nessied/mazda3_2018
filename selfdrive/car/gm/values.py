@@ -240,7 +240,7 @@ EV_CAR = {CAR.VOLT, CAR.BOLT_EUV}
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.SILVERADO, CAR.EQUINOX, CAR.TRAILBLAZER}
 
-# We're integrated at the BCM on these cars
+# We're integrated at the Saftey Data Gateway Module on these cars
 SDGM_CAR = {CAR.XT4}
 
 STEER_THRESHOLD = 1.0

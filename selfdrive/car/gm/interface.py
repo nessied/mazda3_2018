@@ -107,12 +107,12 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate in SDGM_CAR:
         ret.experimentalLongitudinalAvailable = False
-        ret.networkLocation = NetworkLocation.bcm
-        ret.radarUnavailable = True  # no radar
+        ret.networkLocation = NetworkLocation.fwdCamera
         ret.pcmCruise = True
         ret.radarUnavailable = True
-        ret.minEnableSpeed = 18 * CV.KPH_TO_MS
-        ret.minSteerSpeed = 7 * CV.KPH_TO_MS
+        ret.minEnableSpeed = 31 * CV.MPH_TO_MS
+        ret.minSteerSpeed = 29 * CV.MPH_TO_MS
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
 
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
@@ -287,7 +287,7 @@ class CarInterface(CarInterfaceBase):
     # TODO: verify 17 Volt can enable for the first time at a stop and allow for all GMs
     below_min_enable_speed = ret.vEgo < self.CP.minEnableSpeed or self.CS.moving_backward
     if below_min_enable_speed and not (ret.standstill and ret.brake >= 20 and
-                                       self.CP.networkLocation == NetworkLocation.fwdCamera):
+                                       (self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.carFingerprint in SDGM_CAR)):
       events.add(EventName.belowEngageSpeed)
     if ret.cruiseState.standstill:
       events.add(EventName.resumeRequired)

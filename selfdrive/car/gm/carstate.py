@@ -5,7 +5,7 @@ from openpilot.common.numpy_fast import mean
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD
+from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, SDGM_CAR
 
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
@@ -131,7 +131,6 @@ class CarState(CarStateBase):
   def get_can_parser(CP):
     messages = [
       ("BCMTurnSignals", 1),
-      ("ECMPRDNL2", 10),
       ("PSCMStatus", 10),
       ("ESPStatus", 10),
       ("BCMDoorBeltStatus", 10),
@@ -139,12 +138,23 @@ class CarState(CarStateBase):
       ("EBCMWheelSpdFront", 20),
       ("EBCMWheelSpdRear", 20),
       ("EBCMFrictionBrakeStatus", 20),
-      ("AcceleratorPedal2", 33),
       ("ASCMSteeringButton", 33),
-      ("ECMEngineStatus", 100),
       ("PSCMSteeringAngle", 100),
       ("ECMAcceleratorPos", 80),
     ]
+
+    if CP.carFingerprint in SDGM_CAR:
+      messages += [
+        ("ECMPRDNL2", 40),
+        ("AcceleratorPedal2", 40),
+        ("ECMEngineStatus", 80),
+      ]
+    else:
+      messages += [
+        ("ECMPRDNL2", 10),
+        ("AcceleratorPedal2", 33),
+        ("ECMEngineStatus", 100),
+      ]
 
     # Used to read back last counter sent to PT by camera
     if CP.networkLocation == NetworkLocation.fwdCamera:
