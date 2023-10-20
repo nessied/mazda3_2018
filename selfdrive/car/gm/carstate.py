@@ -126,7 +126,14 @@ class CarState(CarStateBase):
           ("ASCMLKASteeringCmd", 10),
           ("ASCMActiveCruiseControlStatus", 25),
         ]
-      if CP.carFingerprint not in SDGM_CAR:
+      if CP.carFingerprint in SDGM_CAR:
+        messages += [
+          ("BCMTurnSignals", 1),
+          ("BCMDoorBeltStatus", 10),
+          ("BCMGeneralPlatformStatus", 10),
+          ("ASCMSteeringButton", 33),
+        ]
+      else:
         messages += [
           ("AEBCmd", 10),
         ]
@@ -136,15 +143,11 @@ class CarState(CarStateBase):
   @staticmethod
   def get_can_parser(CP):
     messages = [
-      ("BCMTurnSignals", 1),
       ("PSCMStatus", 10),
       ("ESPStatus", 10),
-      ("BCMDoorBeltStatus", 10),
-      ("BCMGeneralPlatformStatus", 10),
       ("EBCMWheelSpdFront", 20),
       ("EBCMWheelSpdRear", 20),
       ("EBCMFrictionBrakeStatus", 20),
-      ("ASCMSteeringButton", 33),
       ("PSCMSteeringAngle", 100),
       ("ECMAcceleratorPos", 80),
     ]
@@ -160,6 +163,10 @@ class CarState(CarStateBase):
         ("ECMPRDNL2", 10),
         ("AcceleratorPedal2", 33),
         ("ECMEngineStatus", 100),
+        ("BCMTurnSignals", 1),
+        ("BCMDoorBeltStatus", 10),
+        ("BCMGeneralPlatformStatus", 10),
+        ("ASCMSteeringButton", 33),
       ]
 
     # Used to read back last counter sent to PT by camera
