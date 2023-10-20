@@ -119,11 +119,17 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     messages = []
     if CP.networkLocation == NetworkLocation.fwdCamera:
-      messages += [
-        ("AEBCmd", 10),
-        ("ASCMLKASteeringCmd", 10),
-        ("ASCMActiveCruiseControlStatus", 25),
-      ]
+      if CP.carFingerprint in SDGM_CAR:
+        messages += [
+          ("ASCMLKASteeringCmd", 10),
+          ("ASCMActiveCruiseControlStatus", 25),
+        ]
+      else:
+        messages += [
+          ("AEBCmd", 10),
+          ("ASCMLKASteeringCmd", 10),
+          ("ASCMActiveCruiseControlStatus", 25),
+        ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus.CAMERA)
 
