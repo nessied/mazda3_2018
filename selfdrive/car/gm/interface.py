@@ -261,8 +261,6 @@ class CarInterface(CarInterfaceBase):
       ret.wheelbase = 2.78
       ret.steerRatio = 14.4
       ret.centerToFront = ret.wheelbase * 0.4
-      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
-
 
     return ret
 
