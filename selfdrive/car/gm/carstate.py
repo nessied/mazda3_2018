@@ -108,7 +108,7 @@ class CarState(CarStateBase):
     ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
-      ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
+      ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0 or self.CP.carFingerprint in SDGM_CAR
       # openpilot controls nonAdaptive when not pcmCruise
       if self.CP.pcmCruise:
         ret.cruiseState.nonAdaptive = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCCruiseState"] not in (2, 3)
@@ -119,16 +119,13 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     messages = []
     if CP.networkLocation == NetworkLocation.fwdCamera:
-      if CP.carFingerprint in SDGM_CAR:
-        messages += [
+      messages += [
           ("ASCMLKASteeringCmd", 10),
           ("ASCMActiveCruiseControlStatus", 25),
         ]
-      else:
+      if CP.carFingerprint not in SDGM_CAR:
         messages += [
           ("AEBCmd", 10),
-          ("ASCMLKASteeringCmd", 10),
-          ("ASCMActiveCruiseControlStatus", 25),
         ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus.CAMERA)
