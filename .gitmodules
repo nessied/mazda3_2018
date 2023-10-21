@@ -18,4 +18,4 @@
   url = https://github.com/geohot/tinygrad.git
 [submodule "panda"]
 	path = panda
-	url = https://github.com/garrettpall/panda/tree/xt4
+	url = https://github.com/garrettpall/panda.git
