@@ -1,6 +1,6 @@
 [submodule "panda"]
   path = panda
-  url = ../../commaai/panda.git
+  url = ../../garrettpall/panda/tree/xt4
 [submodule "opendbc"]
   path = opendbc
   url = ../../commaai/opendbc.git
