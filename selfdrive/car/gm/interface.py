@@ -112,7 +112,7 @@ class CarInterface(CarInterfaceBase):
         ret.radarUnavailable = True
         ret.minEnableSpeed = 31 * CV.MPH_TO_MS
         ret.minSteerSpeed = 29 * CV.MPH_TO_MS
-        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SDGM
 
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
