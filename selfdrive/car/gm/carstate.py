@@ -30,8 +30,12 @@ class CarState(CarStateBase):
     ret = car.CarState.new_message()
 
     self.prev_cruise_buttons = self.cruise_buttons
-    self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
-    self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
+    if self.CP.carFingerprint not in SDGM_CAR:
+      self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
+      self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
+    else:
+      self.cruise_buttons = cam_cp.vl["ASCMSteeringButton"]["ACCButtons"]
+      self.buttons_counter = cam_cp.vl["ASCMSteeringButton"]["RollingCounter"]
     self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
     self.moving_backward = pt_cp.vl["EBCMWheelSpdRear"]["MovingBackward"] != 0
 
@@ -87,18 +91,32 @@ class CarState(CarStateBase):
     ret.steerFaultTemporary = self.lkas_status == 2
     ret.steerFaultPermanent = self.lkas_status == 3
 
-    # 1 - open, 0 - closed
-    ret.doorOpen = (pt_cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
-                    pt_cp.vl["BCMDoorBeltStatus"]["FrontRightDoor"] == 1 or
-                    pt_cp.vl["BCMDoorBeltStatus"]["RearLeftDoor"] == 1 or
-                    pt_cp.vl["BCMDoorBeltStatus"]["RearRightDoor"] == 1)
+    if self.CP.carFingerprint not in SDGM_CAR:
+      # 1 - open, 0 - closed
+      ret.doorOpen = (pt_cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
+                      pt_cp.vl["BCMDoorBeltStatus"]["FrontRightDoor"] == 1 or
+                      pt_cp.vl["BCMDoorBeltStatus"]["RearLeftDoor"] == 1 or
+                      pt_cp.vl["BCMDoorBeltStatus"]["RearRightDoor"] == 1)
 
-    # 1 - latched
-    ret.seatbeltUnlatched = pt_cp.vl["BCMDoorBeltStatus"]["LeftSeatBelt"] == 0
-    ret.leftBlinker = pt_cp.vl["BCMTurnSignals"]["TurnSignals"] == 1
-    ret.rightBlinker = pt_cp.vl["BCMTurnSignals"]["TurnSignals"] == 2
+      # 1 - latched
+      ret.seatbeltUnlatched = pt_cp.vl["BCMDoorBeltStatus"]["LeftSeatBelt"] == 0
+      ret.leftBlinker = pt_cp.vl["BCMTurnSignals"]["TurnSignals"] == 1
+      ret.rightBlinker = pt_cp.vl["BCMTurnSignals"]["TurnSignals"] == 2
 
-    ret.parkingBrake = pt_cp.vl["BCMGeneralPlatformStatus"]["ParkBrakeSwActive"] == 1
+      ret.parkingBrake = pt_cp.vl["BCMGeneralPlatformStatus"]["ParkBrakeSwActive"] == 1
+    else:
+        # 1 - open, 0 - closed
+      ret.doorOpen = (cam_cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
+                      cam_cp.vl["BCMDoorBeltStatus"]["FrontRightDoor"] == 1 or
+                      cam_cp.vl["BCMDoorBeltStatus"]["RearLeftDoor"] == 1 or
+                      cam_cp.vl["BCMDoorBeltStatus"]["RearRightDoor"] == 1)
+
+      # 1 - latched
+      ret.seatbeltUnlatched = cam_cp.vl["BCMDoorBeltStatus"]["LeftSeatBelt"] == 0
+      ret.leftBlinker = cam_cp.vl["BCMTurnSignals"]["TurnSignals"] == 1
+      ret.rightBlinker = cam_cp.vl["BCMTurnSignals"]["TurnSignals"] == 2
+
+      ret.parkingBrake = cam_cp.vl["BCMGeneralPlatformStatus"]["ParkBrakeSwActive"] == 1
     ret.cruiseState.available = pt_cp.vl["ECMEngineStatus"]["CruiseMainOn"] != 0
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
     ret.accFaulted = (pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED or
