@@ -1,3 +1,6 @@
+[submodule "panda"]
+  path = panda
+  url = ../../commaai/panda.git
 [submodule "opendbc"]
   path = opendbc
   url = ../../commaai/opendbc.git
@@ -16,6 +19,3 @@
 [submodule "tinygrad"]
   path = tinygrad_repo
   url = https://github.com/geohot/tinygrad.git
-[submodule "panda"]
-	path = panda
-	url = https://github.com/garrettpall/panda.git
