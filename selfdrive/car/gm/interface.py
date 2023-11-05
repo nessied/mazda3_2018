@@ -110,8 +110,8 @@ class CarInterface(CarInterfaceBase):
         ret.networkLocation = NetworkLocation.fwdCamera
         ret.pcmCruise = True
         ret.radarUnavailable = True
-        ret.minEnableSpeed = 31 * CV.MPH_TO_MS
-        ret.minSteerSpeed = 29 * CV.MPH_TO_MS
+        ret.minEnableSpeed = -1.  # engage speed is decided by ASCM
+        ret.minSteerSpeed = 30 * CV.MPH_TO_MS
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SDGM
 
     else:  # ASCM, OBD-II harness

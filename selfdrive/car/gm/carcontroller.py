@@ -49,7 +49,7 @@ class CarController:
     # Send CAN commands.
     can_sends = []
 
-    # Steering (Active: 50Hz, inactive: 10Hz)
+    # Steering (Active: ~33Hz, inactive: 10Hz)
     steer_step = self.params.STEER_STEP if CC.latActive else self.params.INACTIVE_STEER_STEP
 
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
