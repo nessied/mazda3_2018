@@ -120,6 +120,7 @@ class CarHarness(EnumBase):
   mazda = BaseCarHarness("Mazda connector")
   ford_q3 = BaseCarHarness("Ford Q3 connector")
   ford_q4 = BaseCarHarness("Ford Q4 connector")
+  gmsdgm = BaseCarHarness("GM SDGM connector", parts=[Accessory.harness_box, Cable.rj45_cable_7ft, Cable.long_obdc_cable, Cable.usbc_coupler, Accessory.comma_power_v2])
 
 
 class Device(EnumBase):
