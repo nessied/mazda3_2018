@@ -97,10 +97,8 @@ class GMCarInfo(CarInfo):
   package: str = "Adaptive Cruise Control (ACC)"
 
   def init_make(self, CP: car.CarParams):
-    if CP.networkLocation == car.CarParams.NetworkLocation.fwdCamera and CP.carFingerprint not in SDGM_CAR:
+    if CP.networkLocation == car.CarParams.NetworkLocation.fwdCamera:
       self.car_parts = CarParts.common([CarHarness.gm])
-    elif CP.carFingerprint in SDGM_CAR:
-      self.car_parts = CarParts.common([CarHarness.gmsdgm])
     else:
       self.car_parts = CarParts.common([CarHarness.obd_ii])
       self.footnotes.append(Footnote.OBD_II)
