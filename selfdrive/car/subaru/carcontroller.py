@@ -64,6 +64,9 @@ class CarController:
       apply_rpm = int(round(interp(actuators.accel, CarControllerParams.RPM_LOOKUP_BP, CarControllerParams.RPM_LOOKUP_V)))
       apply_brake = int(round(interp(actuators.accel, CarControllerParams.BRAKE_LOOKUP_BP, CarControllerParams.BRAKE_LOOKUP_V)))
 
+      if actuators.accel < 0:
+        apply_throttle = CarControllerParams.THROTTLE_ENGINE_BRAKE
+
       # limit min and max values
       cruise_throttle = clip(apply_throttle, CarControllerParams.THROTTLE_MIN, CarControllerParams.THROTTLE_MAX)
       cruise_rpm = clip(apply_rpm, CarControllerParams.RPM_MIN, CarControllerParams.RPM_MAX)
@@ -74,27 +77,8 @@ class CarController:
       cruise_brake = CarControllerParams.BRAKE_MIN
 
     # *** alerts and pcm cancel ***
-    if self.CP.carFingerprint in PREGLOBAL_CARS:
-      if self.frame % 5 == 0:
-        # 1 = main, 2 = set shallow, 3 = set deep, 4 = resume shallow, 5 = resume deep
-        # disengage ACC when OP is disengaged
-        if pcm_cancel_cmd:
-          cruise_button = 1
-        # turn main on if off and past start-up state
-        elif not CS.out.cruiseState.available and CS.ready:
-          cruise_button = 1
-        else:
-          cruise_button = CS.cruise_button
-
-        # unstick previous mocked button press
-        if cruise_button == 1 and self.cruise_button_prev == 1:
-          cruise_button = 0
-        self.cruise_button_prev = cruise_button
-
-        can_sends.append(subarucan.create_preglobal_es_distance(self.packer, cruise_button, CS.es_distance_msg))
-
-    else:
-      if self.frame % 10 == 0:
+    if self.frame % 10 == 0:
+      if self.CP.carFingerprint not in PREGLOBAL_CARS:
         can_sends.append(subarucan.create_es_dashstatus(self.packer, self.frame // 10, CS.es_dashstatus_msg, CC.enabled,
                                                         self.CP.openpilotLongitudinalControl, CC.longActive, hud_control.leadVisible))
 
@@ -104,9 +88,12 @@ class CarController:
 
         if self.CP.flags & SubaruFlags.SEND_INFOTAINMENT:
           can_sends.append(subarucan.create_es_infotainment(self.packer, self.frame // 10, CS.es_infotainment_msg, hud_control.visualAlert))
+        else:
+          can_sends.append(subarucan.create_preglobal_es_dashstatus(self.packer, CS.es_dashstatus_msg, self.CP.openpilotLongitudinalControl))
 
-      if self.CP.openpilotLongitudinalControl:
-        if self.frame % 5 == 0:
+    if self.CP.openpilotLongitudinalControl:
+      if self.frame % 5 == 0:
+        if self.CP.carFingerprint not in PREGLOBAL_CARS:
           can_sends.append(subarucan.create_es_status(self.packer, self.frame // 5, CS.es_status_msg,
                                                       self.CP.openpilotLongitudinalControl, CC.longActive, cruise_rpm))
 
@@ -116,10 +103,25 @@ class CarController:
           can_sends.append(subarucan.create_es_distance(self.packer, self.frame // 5, CS.es_distance_msg, 0, pcm_cancel_cmd,
                                                         self.CP.openpilotLongitudinalControl, cruise_brake > 0, cruise_throttle))
       else:
-        if pcm_cancel_cmd:
-          if self.CP.carFingerprint not in HYBRID_CARS:
-            bus = CanBus.alt if self.CP.carFingerprint in GLOBAL_GEN2 else CanBus.main
-            can_sends.append(subarucan.create_es_distance(self.packer, CS.es_distance_msg["COUNTER"] + 1, CS.es_distance_msg, bus, pcm_cancel_cmd))
+          can_sends.append(subarucan.create_preglobal_es_status(self.packer, self.frame // 5, CS.es_status_msg,
+                                                                self.CP.openpilotLongitudinalControl, CC.longActive, cruise_rpm))
+
+          can_sends.append(subarucan.create_preglobal_es_brake(self.packer, self.frame // 5, CS.es_brake_msg, CC.enabled, cruise_brake))
+
+          can_sends.append(subarucan.create_preglobal_es_distance(self.packer, self.frame // 5, CS.es_distance_msg, pcm_cancel_cmd,
+                                                                  self.CP.openpilotLongitudinalControl, cruise_brake > 0, cruise_throttle))
+      if self.frame % 2 == 0:
+        if self.CP.carFingerprint in PREGLOBAL_CARS:
+          stock_brake_value = CS.es_brake_msg["Brake_Pressure"]
+          can_sends.append(subarucan.create_preglobal_brake_status(self.packer, CS.brake_status_msg, stock_brake_value))
+
+    if pcm_cancel_cmd:
+      if self.CP.carFingerprint not in HYBRID_CARS:
+        bus = CanBus.alt if self.CP.carFingerprint in GLOBAL_GEN2 else CanBus.main
+        if self.CP.carFingerprint not in PREGLOBAL_CARS:
+          can_sends.append(subarucan.create_es_distance(self.packer, CS.es_distance_msg["COUNTER"] + 1, CS.es_distance_msg, bus, pcm_cancel_cmd))
+        else:
+          can_sends.append(subarucan.create_preglobal_es_distance(self.packer, CS.es_distance_msg["COUNTER"] + 1, CS.es_distance_msg, pcm_cancel_cmd))
 
       if self.CP.flags & SubaruFlags.DISABLE_EYESIGHT:
         # Tester present (keeps eyesight disabled)

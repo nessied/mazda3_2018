@@ -414,6 +414,7 @@ FW_VERSIONS = {
       b'\xbf\xe2@\x80\x00',
       b'\xbf\xf2@\x80\x00',
       b'\xbf\xfb\xe0b\x00',
+      b'\xbd\xf2@\x80\x00',
     ],
   },
   CAR.OUTBACK_PREGLOBAL_2018: {
