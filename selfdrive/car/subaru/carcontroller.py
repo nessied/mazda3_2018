@@ -88,8 +88,8 @@ class CarController:
 
         if self.CP.flags & SubaruFlags.SEND_INFOTAINMENT:
           can_sends.append(subarucan.create_es_infotainment(self.packer, self.frame // 10, CS.es_infotainment_msg, hud_control.visualAlert))
-        else:
-          can_sends.append(subarucan.create_preglobal_es_dashstatus(self.packer, CS.es_dashstatus_msg, self.CP.openpilotLongitudinalControl))
+      else:
+        can_sends.append(subarucan.create_preglobal_es_dashstatus(self.packer, CS.es_dashstatus_msg, self.CP.openpilotLongitudinalControl))
 
     if self.CP.openpilotLongitudinalControl:
       if self.frame % 5 == 0:
@@ -102,7 +102,7 @@ class CarController:
 
           can_sends.append(subarucan.create_es_distance(self.packer, self.frame // 5, CS.es_distance_msg, 0, pcm_cancel_cmd,
                                                         self.CP.openpilotLongitudinalControl, cruise_brake > 0, cruise_throttle))
-      else:
+        else:
           can_sends.append(subarucan.create_preglobal_es_status(self.packer, self.frame // 5, CS.es_status_msg,
                                                                 self.CP.openpilotLongitudinalControl, CC.longActive, cruise_rpm))
 
