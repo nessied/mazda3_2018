@@ -5,7 +5,7 @@ from openpilot.common.numpy_fast import mean
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, GMFlags, CC_ONLY_CAR, CAMERA_ACC_CAR, SDGM_CAR
+from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, GMFlags, CC_ONLY_CAR, CAMERA_ACC_CAR, SDGM_CAR, ALT_ACCS
 
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
@@ -146,14 +146,20 @@ class CarState(CarStateBase):
     ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
     if self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.NO_CAMERA.value:
       if self.CP.carFingerprint not in CC_ONLY_CAR:
-        ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
+        if self.CP.carFingerprint not in ALT_ACCS:
+          ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
+        else:
+          ret.cruiseState.speed = pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] * CV.KPH_TO_MS
       if self.CP.carFingerprint not in SDGM_CAR:
         ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
       else:
         ret.stockAeb = False
       # openpilot controls nonAdaptive when not pcmCruise
       if self.CP.pcmCruise:
-        ret.cruiseState.nonAdaptive = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCCruiseState"] not in (2, 3)
+        if self.CP.carFingerprint not in ALT_ACCS:
+          ret.cruiseState.nonAdaptive = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCCruiseState"] not in (2, 3)
+        else:
+          ret.cruiseState.nonAdaptive = False # TODO: Find this message
     if self.CP.carFingerprint in CC_ONLY_CAR:
       ret.accFaulted = False
       ret.cruiseState.speed = pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] * CV.KPH_TO_MS
@@ -179,6 +185,7 @@ class CarState(CarStateBase):
       has_camera = self.CP.networkLocation == NetworkLocation.fwdCamera 
       has_camera &= not self.CP.flags & GMFlags.NO_CAMERA.value 
       has_camera &= not self.CP.carFingerprint in (CC_ONLY_CAR)
+      has_camera &= not self.CP.carFingerprint in (ALT_ACCS)
 
       if has_camera:
         # Need to subtract by 1 to comply with the personality profiles of "0", "1", and "2"
@@ -239,7 +246,7 @@ class CarState(CarStateBase):
         messages += [
           ("AEBCmd", 10),
         ]
-      if CP.carFingerprint not in CC_ONLY_CAR:
+      if CP.carFingerprint not in CC_ONLY_CAR and CP.carFingerprint not in ALT_ACCS:
         messages += [
           ("ASCMActiveCruiseControlStatus", 25),
         ]
@@ -264,6 +271,19 @@ class CarState(CarStateBase):
         ("AcceleratorPedal2", 40),
         ("ECMEngineStatus", 80),
       ]
+    elif CP.carFingerprint in ALT_ACCS:
+      messages += [
+        ("ECMCruiseControl", 10),
+        ("ECMPRDNL2", 40),
+        ("AcceleratorPedal2", 40),
+        ("ECMEngineStatus", 80),
+        ("BCMTurnSignals", 1),
+        ("BCMDoorBeltStatus", 10),
+        ("BCMGeneralPlatformStatus", 10),
+        ("ASCMSteeringButton", 33),
+      ]
+      if CP.enableBsm:
+        messages.append(("BCMBlindSpotMonitor", 10))
     else:
       messages += [
         ("ECMPRDNL2", 10),
