@@ -6,10 +6,14 @@ from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits, common_fault_avoidance
 from openpilot.selfdrive.car.hyundai import hyundaicanfd, hyundaican
 from openpilot.selfdrive.car.hyundai.hyundaicanfd import CanBus
-from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, Buttons, CarControllerParams, CANFD_CAR, CAR
+from openpilot.selfdrive.car.hyundai.values import HyundaiFlags, Buttons, CarControllerParams, CANFD_CAR, CAR, LEGACY_SAFETY_MODE_CAR
+from openpilot.selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX
+from openpilot.common.params import Params
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 LongCtrlState = car.CarControl.Actuators.LongControlState
+
+params_memory = Params("/dev/shm/params")
 
 # EPS faults if you apply torque while the steering angle is above 90 degrees for more than 1 second
 # All slightly below EPS thresholds to avoid fault
@@ -59,6 +63,10 @@ class CarController:
   def update(self, CC, CS, now_nanos, frogpilot_variables):
     actuators = CC.actuators
     hud_control = CC.hudControl
+
+    hud_v_cruise = hud_control.setSpeed
+    if hud_v_cruise > 70:
+      hud_v_cruise = 0
 
     # steering torque
     new_steer = int(round(actuators.steer * self.params.STEER_MAX))
@@ -145,6 +153,25 @@ class CarController:
       if not self.CP.openpilotLongitudinalControl:
         can_sends.extend(self.create_button_messages(CC, CS, use_clu11=True))
 
+        # CSLC
+        if frogpilot_variables.CSLC and frogpilot_variables.CSLCA and CC.enabled and not CS.out.gasPressed: #and CS.cruise_buttons == Buttons.NONE:
+          cslcSetSpeed = get_set_speed(self, hud_v_cruise)
+          self.cruise_button = get_cslc_button(self, cslcSetSpeed, CS)
+          if self.cruise_button != Buttons.NONE:
+            if self.CP.carFingerprint in LEGACY_SAFETY_MODE_CAR:
+              send_freq = 1
+              # send resume at a max freq of 10Hz
+              if (self.frame - self.last_button_frame) * DT_CTRL > 0.1 * send_freq:
+                # send 25 messages at a time to increases the likelihood of cruise buttons being accepted
+                can_sends.extend([hyundaican.create_clu11(self.packer, self.frame, CS.clu11, self.cruise_button, self.CP.carFingerprint)] * 25)
+                if (self.frame - self.last_button_frame) * DT_CTRL >= 0.15 * send_freq:
+                  self.last_button_frame = self.frame
+            elif self.frame % 2 == 0:
+              if self.CP.carFingerprint in CANFD_CAR:
+                can_sends.append(hyundaicanfd.create_buttons(self.packer, self.CP, self.CAN, ((self.frame // 2) + 1) % 0x10, self.cruise_button))
+              else:
+                can_sends.extend([hyundaican.create_clu11(self.packer, (self.frame // 2) + 1, CS.clu11, self.cruise_button, self.CP.carFingerprint)] * 25)
+
       if self.frame % 2 == 0 and self.CP.openpilotLongitudinalControl:
         # TODO: unclear if this is needed
         jerk = 3.0 if actuators.longControlState == LongCtrlState.pid else 1.0
@@ -208,3 +235,26 @@ class CarController:
             self.last_button_frame = self.frame
 
     return can_sends
+
+def get_set_speed(self, hud_v_cruise):
+  v_cruise_kph = min(hud_v_cruise * CV.MS_TO_KPH, V_CRUISE_MAX)
+  v_cruise = int(round(v_cruise_kph * CV.KPH_TO_MPH))
+
+  v_cruise_slc: int = 0
+  v_cruise_slc = params_memory.get_int("CSLCSpeed")
+
+  if v_cruise_slc > 0:
+    v_cruise = v_cruise_slc
+  return v_cruise
+
+def get_cslc_button(self, cslcSetSpeed, CS):
+  cruiseBtn = Buttons.NONE
+  speedSetPoint = int(round(CS.out.cruiseState.speed * CV.MS_TO_MPH))
+
+  if cslcSetSpeed < speedSetPoint and speedSetPoint > 25:
+    cruiseBtn = Buttons.SET_DECEL
+  elif cslcSetSpeed > speedSetPoint:
+    cruiseBtn = Buttons.RES_ACCEL
+  else:
+    cruiseBtn = Buttons.NONE
+  return cruiseBtn

@@ -616,7 +616,7 @@ class Controls:
           else:
             self.state = State.enabled
           self.current_alert_types.append(ET.ENABLE)
-          self.v_cruise_helper.initialize_v_cruise(CS, self.experimental_mode, self.conditional_experimental_mode)
+          self.v_cruise_helper.initialize_v_cruise(CS, self.frogpilot_variables, self.experimental_mode, self.conditional_experimental_mode)
 
     # Check if openpilot is engaged and actuators are enabled
     self.enabled = self.state in ENABLED_STATES
@@ -1004,6 +1004,8 @@ class Controls:
 
   def update_frogpilot_params(self):
     self.conditional_experimental_mode = self.params.get_bool("ConditionalExperimental")
+    self.frogpilot_variables.CSLC = self.params.get_bool("CSLCEnabled")
+    self.frogpilot_variables.CSLCA = self.params.get_bool("CSLCAvailable")
 
     custom_theme = self.params.get_bool("CustomTheme")
     custom_sounds = self.params.get_int("CustomSounds") if custom_theme else 0
