@@ -71,6 +71,8 @@ class LongitudinalPlanner:
       self.personality = int(self.params.get('LongitudinalPersonality'))
     except (ValueError, TypeError):
       self.personality = log.LongitudinalPersonality.standard
+    if self.personality < 0:
+      self.personality = log.LongitudinalPersonality.standard
 
   @staticmethod
   def parse_model(model_msg, model_error):
