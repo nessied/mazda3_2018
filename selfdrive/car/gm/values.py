@@ -47,6 +47,12 @@ class CarControllerParams:
       # Camera transitions to MAX_ACC_REGEN from ZERO_GAS and uses friction brakes instantly
       max_regen_acceleration = 0.
 
+    elif CP.carFingerprint in SC_CAR:
+      self.MAX_GAS = 3400
+      self.MAX_ACC_REGEN = 1514
+      self.INACTIVE_REGEN = 1554
+      max_regen_acceleration = 0.
+
     else:
       self.MAX_GAS = 3072  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
       self.MAX_ACC_REGEN = 1404  # Max ACC regen is slightly less than max paddle regen
@@ -77,6 +83,7 @@ class CAR(StrEnum):
   SILVERADO = "CHEVROLET SILVERADO 1500 2020"
   EQUINOX = "CHEVROLET EQUINOX 2019"
   TRAILBLAZER = "CHEVROLET TRAILBLAZER 2021"
+  SC_BOLT = "CHEVROLET SC BOLT EUV 2022"
 
 
 class Footnote(Enum):
@@ -119,6 +126,7 @@ CAR_INFO: Dict[str, Union[GMCarInfo, List[GMCarInfo]]] = {
   ],
   CAR.EQUINOX: GMCarInfo("Chevrolet Equinox 2019-22"),
   CAR.TRAILBLAZER: GMCarInfo("Chevrolet Trailblazer 2021-22"),
+  CAR.SC_BOLT: GMCarInfo("Chevrolet Super Cruise Bolt EUV 2022-23", "Premier or Premier Redline Trim with Super Cruise Package"),
 }
 
 
@@ -182,10 +190,13 @@ FW_QUERY_CONFIG = FwQueryConfig(
 )
 
 DBC: Dict[str, Dict[str, str]] = defaultdict(lambda: dbc_dict('gm_global_a_powertrain_generated', 'gm_global_a_object', chassis_dbc='gm_global_a_chassis'))
+DBC[CAR.SC_BOLT] = dbc_dict('cadillac_ct6_powertrain', 'cadillac_ct6_object', chassis_dbc='cadillac_ct6_chassis')
 
 EV_CAR = {CAR.VOLT, CAR.BOLT_EUV}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.SILVERADO, CAR.EQUINOX, CAR.TRAILBLAZER}
+
+SC_CAR = {CAR.SC_BOLT}
 
 STEER_THRESHOLD = 1.0

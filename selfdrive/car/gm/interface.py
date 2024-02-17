@@ -8,7 +8,7 @@ from openpilot.common.basedir import BASEDIR
 from openpilot.common.conversions import Conversions as CV
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.gm.radar_interface import RADAR_HEADER_MSG
-from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CanBus
+from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, SC_CAR, CanBus
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD, LatControlInputs, NanoFFModel
 from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
 
@@ -120,6 +120,15 @@ class CarInterface(CarInterfaceBase):
         ret.pcmCruise = False
         ret.openpilotLongitudinalControl = True
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_LONG
+
+    elif candidate in SC_CAR:
+      ret.experimentalLongitudinalAvailable = False
+      ret.networkLocation = NetworkLocation.fwdCamera
+      ret.radarUnavailable = True  # no radar
+      ret.pcmCruise = True
+      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SC
+      ret.minEnableSpeed = -1
+      ret.minSteerSpeed = 0 * CV.KPH_TO_MS
 
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
@@ -268,6 +277,15 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
+    elif candidate == CAR.SC_BOLT:
+      ret.mass = 1669.
+      ret.wheelbase = 2.63779
+      ret.steerRatio = 16.8
+      ret.centerToFront = ret.wheelbase * 0.4
+      ret.tireStiffnessFactor = 1.0
+      ret.steerActuatorDelay = 0.2
+      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
     return ret
 
   # returns a car.CarState
@@ -291,7 +309,7 @@ class CarInterface(CarInterfaceBase):
     # TODO: verify 17 Volt can enable for the first time at a stop and allow for all GMs
     below_min_enable_speed = ret.vEgo < self.CP.minEnableSpeed or self.CS.moving_backward
     if below_min_enable_speed and not (ret.standstill and ret.brake >= 20 and
-                                       self.CP.networkLocation == NetworkLocation.fwdCamera):
+                                       (self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.carFingerprint in SC_CAR)):
       events.add(EventName.belowEngageSpeed)
     if ret.cruiseState.standstill:
       events.add(EventName.resumeRequired)
