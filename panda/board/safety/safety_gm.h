@@ -11,15 +11,15 @@ const SteeringLimits GM_STEERING_LIMITS = {
 
 const LongitudinalLimits GM_ASCM_LONG_LIMITS = {
   .max_gas = 8191,
-  .min_gas = 1404,
-  .inactive_gas = 1404,
+  .min_gas = 5500,
+  .inactive_gas = 5500,
   .max_brake = 400,
 };
 
 const LongitudinalLimits GM_CAM_LONG_LIMITS = {
   .max_gas = 8848,
-  .min_gas = 1514,
-  .inactive_gas = 1554,
+  .min_gas = 5610,
+  .inactive_gas = 5650,
   .max_brake = 400,
 };
 
@@ -75,19 +75,19 @@ bool gm_cc_long = false;
 
 static void handle_gm_wheel_buttons(const CANPacket_t *to_push) {
   int button = (GET_BYTE(to_push, 5) & 0x70U) >> 4;
-  
+
   // enter controls on falling edge of set or rising edge of resume (avoids fault)
   bool set = (button != GM_BTN_SET) && (cruise_button_prev == GM_BTN_SET);
   bool res = (button == GM_BTN_RESUME) && (cruise_button_prev != GM_BTN_RESUME);
   if (set || res) {
     controls_allowed = true;
   }
-  
+
   // exit controls on cancel press
   if (button == GM_BTN_CANCEL) {
     controls_allowed = false;
   }
-  
+
   cruise_button_prev = button;
 }
 
@@ -182,7 +182,7 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
   // GAS/REGEN: safety check
   if (addr == 0x2CB) {
     bool apply = GET_BIT(to_send, 0U) != 0U;
-    int gas_regen = ((GET_BYTE(to_send, 2) & 0x7FU) << 5) + ((GET_BYTE(to_send, 3) & 0xF8U) >> 3);
+    int gas_regen = ((GET_BYTE(to_send, 1) & 0x1U) << 13) + ((GET_BYTE(to_send, 2) & 0xFFU) << 5) + ((GET_BYTE(to_send, 3) & 0xF8U) >> 3);
 
     bool violation = false;
     // Allow apply bit in pre-enabled and overriding states
