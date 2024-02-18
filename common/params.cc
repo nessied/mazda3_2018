@@ -265,6 +265,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"DriveStats", PERSISTENT},
     {"DynamicPathWidth", PERSISTENT},
     {"EngageVolume", PERSISTENT},
+    {"EVTable", PERSISTENT},
     {"ExperimentalModeActivation", PERSISTENT},
     {"ExperimentalModeViaLKAS", PERSISTENT},
     {"ExperimentalModeViaScreen", PERSISTENT},
