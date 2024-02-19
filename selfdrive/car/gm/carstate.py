@@ -106,6 +106,7 @@ class CarState(CarStateBase):
       ("BCMDoorBeltStatus", 0),
       ("ASCMActiveCruiseControlStatus", 0),
       ("ASCMLKASteeringCmd", 0),
+      ("BCMTurnSignals", 0),
     ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, CanBus.CAMERA)
@@ -114,7 +115,6 @@ class CarState(CarStateBase):
   def get_can_parser(CP):
     messages = [
       ("EBCMBrakePedalPosition", 0),
-      ("BCMTurnSignals", 0),
       ("AcceleratorPedal", 0),
       ("ASCMSteeringButton", 0),
       ("PSCMSteeringAngle", 0),
