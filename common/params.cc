@@ -371,6 +371,8 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"ShowStorageUsed", PERSISTENT},
     {"Sidebar", PERSISTENT},
     {"SLCConfirmation", PERSISTENT},
+    {"SLCConfirmationLower", PERSISTENT},
+    {"SLCConfirmationHigher", PERSISTENT},
     {"SLCConfirmed", PERSISTENT},
     {"SLCConfirmedPressed", PERSISTENT},
     {"SLCFallback", PERSISTENT},
