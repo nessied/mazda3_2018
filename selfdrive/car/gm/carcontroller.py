@@ -112,6 +112,8 @@ class CarController:
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
       can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      can_sends.append(gmcan.create_steering_control_ct6(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
+      can_sends.append(gmcan.create_steering_control_ct6_b(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz

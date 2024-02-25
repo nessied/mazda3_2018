@@ -217,3 +217,43 @@ def create_gm_cc_spam_command(packer, controller, CS, actuators):
     return [create_buttons(packer, CanBus.POWERTRAIN, idx, cruiseBtn)]
   else:
     return []
+
+def create_steering_control_ct6(packer, bus, apply_steer, v_ego, idx, enabled):
+
+  values = {
+    "LKASteeringCmdActive": 1 if enabled else 0,
+    "LKASteeringCmd": apply_steer,
+    "RollingCounter": idx,
+    "SetMe1": 1,
+    "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
+    "LKASMode": 2 if enabled else 0,
+    "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
+  }
+
+  dat = packer.make_can_msg("ASCMLKASteeringCmd_SC", 0, values)[2]
+  # the checksum logic is weird
+  values['LKASteeringCmdChecksum'] = (0x2a +
+                                      sum([i for i in dat][:4]) +
+                                      values['LKASMode']) & 0x3ff
+  
+  return packer.make_can_msg("ASCMLKASteeringCmd_SC", bus, values)
+
+def create_steering_control_ct6_b(packer, bus, apply_steer, v_ego, idx, enabled):
+
+  values = {
+    "LKASteeringCmdActive": 1 if enabled else 0,
+    "LKASteeringCmd": apply_steer,
+    "RollingCounter": idx,
+    "SetMe1": 1,
+    "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
+    "LKASMode": 2 if enabled else 0,
+    "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
+  }
+
+  dat = packer.make_can_msg("ASCMBLKASteeringCmd_SC", 0, values)[2]
+  # the checksum logic is weird
+  values['LKASteeringCmdChecksum'] = (0x2a +
+                                      sum([i for i in dat][:4]) +
+                                      values['LKASMode']) & 0x3ff
+  
+  return packer.make_can_msg("ASCMBLKASteeringCmd_SC", bus, values)

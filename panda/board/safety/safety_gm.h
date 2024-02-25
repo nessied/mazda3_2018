@@ -37,10 +37,10 @@ const CanMsg GM_ASCM_TX_MSGS[] = {{0x180, 0, 4}, {0x409, 0, 7}, {0x40A, 0, 7}, {
                                   {0x315, 2, 5},  // ch bus
                                   {0x104c006c, 3, 3}, {0x10400060, 3, 5}};  // gmlan
 
-const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4}, {0x200, 0, 6}, {0x1E1, 0, 7},  // pt bus
+const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4}, {0x200, 0, 6}, {0x1E1, 0, 7}, {0x152, 0, 6}, {0x154, 0, 6},  // pt bus
                                  {0x1E1, 2, 7}, {0x184, 2, 8}};  // camera bus
 
-const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4}, {0x315, 0, 5}, {0x2CB, 0, 8}, {0x370, 0, 6}, {0x200, 0, 6},  // pt bus
+const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4}, {0x315, 0, 5}, {0x2CB, 0, 8}, {0x370, 0, 6}, {0x200, 0, 6}, {0x152, 0, 6}, {0x154, 0, 6},  // pt bus
                                       {0x1E1, 2, 7}, {0x184, 2, 8}};  // camera bus
 
 const CanMsg GM_SDGM_TX_MSGS[] = {{0x180, 0, 4}, {0x1E1, 0, 7},  // pt bus

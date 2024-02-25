@@ -122,7 +122,7 @@ class CarInterface(CarInterfaceBase):
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
       ret.minEnableSpeed = 5 * CV.KPH_TO_MS
-      ret.minSteerSpeed = 10 * CV.KPH_TO_MS
+      ret.minSteerSpeed = 0 * CV.KPH_TO_MS
 
       # Tuning for experimental long
       ret.longitudinalTuning.kpV = [2.0, 1.5]
