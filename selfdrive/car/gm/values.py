@@ -38,7 +38,7 @@ class CarControllerParams:
     self.MAX_BRAKE = 400  # ~ -4.0 m/s^2 with regen
 
     if CP.carFingerprint in CAMERA_ACC_CAR:
-      self.MAX_GAS = 8350
+      self.MAX_GAS = 8000
       self.MAX_ACC_REGEN = 5610
       self.INACTIVE_REGEN = 5650
       # Camera ACC vehicles have no regen while enabled.
