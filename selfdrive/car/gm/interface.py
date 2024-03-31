@@ -384,7 +384,7 @@ class CarInterface(CarInterfaceBase):
       ret.experimentalLongitudinalAvailable = False
       ret.minEnableSpeed = 24 * CV.MPH_TO_MS
       ret.openpilotLongitudinalControl = True and not params.get_bool("DisableOpenpilotLongitudinal")
-      ret.pcmCruise = False
+      ret.pcmCruise = True
 
       ret.longitudinalTuning.deadzoneBP = [0.]
       ret.longitudinalTuning.deadzoneV = [0.56]  # == 2 km/h/s, 1.25 mph/s
