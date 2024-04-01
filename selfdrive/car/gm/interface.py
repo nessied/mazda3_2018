@@ -384,7 +384,7 @@ class CarInterface(CarInterfaceBase):
       ret.experimentalLongitudinalAvailable = False
       ret.minEnableSpeed = 24 * CV.MPH_TO_MS
       ret.openpilotLongitudinalControl = True and not params.get_bool("DisableOpenpilotLongitudinal")
-      ret.pcmCruise = True
+      ret.pcmCruise = False
 
       ret.longitudinalTuning.deadzoneBP = [0.]
       ret.longitudinalTuning.deadzoneV = [0.56]  # == 2 km/h/s, 1.25 mph/s
@@ -420,10 +420,11 @@ class CarInterface(CarInterfaceBase):
                                               unpressed_btn=CruiseButtons.UNPRESS)
 
     # The ECM allows enabling on falling edge of set, but only rising edge of resume
+    ENABLE_BUTTONS = (ButtonType.accelCruise, ButtonType.decelCruise) if (self.CP.flags & GMFlags.CC_LONG.value) else (ButtonType.decelCruise,)
     events = self.create_common_events(ret, frogpilot_variables, extra_gears=[GearShifter.sport, GearShifter.low,
                                                          GearShifter.eco, GearShifter.manumatic],
-                                       pcm_enable=self.CP.pcmCruise, enable_buttons=(ButtonType.decelCruise,))
-    if not self.CP.pcmCruise:
+                                       pcm_enable=self.CP.pcmCruise, enable_buttons=ENABLE_BUTTONS)
+    if not self.CP.pcmCruise and not (self.CP.flags & GMFlags.CC_LONG.value):
       if any(b.type == ButtonType.accelCruise and b.pressed for b in ret.buttonEvents):
         events.add(EventName.buttonEnable)
 
