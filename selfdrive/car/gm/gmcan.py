@@ -182,16 +182,19 @@ def create_gm_cc_spam_command(packer, controller, CS, actuators, frogpilot_varia
   Vego = CS.out.vEgo
 
   cruiseBtn = CruiseButtons.INIT
-  rate = 0.04
+  if abs(accel) <= 0.15:
+    rate = 1
+  else:
+    rate = 0.2
 
   MS_CONVERT = CV.MS_TO_KPH if frogpilot_variables.is_metric else CV.MS_TO_MPH
 
   speedSetPoint = int(round(CS.out.cruiseState.speed * MS_CONVERT))
 
   if accel > 0:
-    DesiredSetPoint = int(round((Vego * 1.01 + 5 * accel) * MS_CONVERT)) # 1.01 factor to match cluster speed better
+    DesiredSetPoint = int(round((Vego * 1.01 + 3 * accel) * MS_CONVERT)) # 1.01 factor to match cluster speed better
   else: # accel <= 0
-    DesiredSetPoint = int(round((Vego * 1.01 + 5 * accel) * MS_CONVERT))
+    DesiredSetPoint = int(round((Vego * 1.01 + 3 * accel) * MS_CONVERT))
   
   if CS.CP.minEnableSpeed - (DesiredSetPoint /  MS_CONVERT) > 3.25:
     cruiseBtn = CruiseButtons.CANCEL
