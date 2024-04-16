@@ -351,6 +351,14 @@ class CarInterface(CarInterfaceBase):
       ret.tireStiffnessFactor = 1.0
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+    
+    elif candidate == CAR.MALIBU_CC:
+      ret.mass = 1450.
+      ret.wheelbase = 2.8
+      ret.steerRatio = 15.8
+      ret.centerToFront = ret.wheelbase * 0.4
+      ret.steerActuatorDelay = 0.2
+      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     if ret.enableGasInterceptor:
       ret.networkLocation = NetworkLocation.fwdCamera
