@@ -185,7 +185,7 @@ def create_gm_cc_spam_command(packer, controller, CS, actuators, frogpilot_varia
   if abs(accel) <= 0.15:
     rate = 1
   else:
-    rate = 0.2
+    rate = 0.04
 
   MS_CONVERT = CV.MS_TO_KPH if frogpilot_variables.is_metric else CV.MS_TO_MPH
 
