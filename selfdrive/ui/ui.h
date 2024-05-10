@@ -166,7 +166,13 @@ typedef struct UIScene {
   uint64_t started_frame;
 
   // FrogPilot variables
+  bool enabled;
+  bool experimental_mode;
+  bool map_open;
   bool online;
+  bool right_hand_drive;
+
+  int alert_size;
 
 } UIScene;
 
