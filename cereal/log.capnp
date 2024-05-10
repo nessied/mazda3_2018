@@ -2330,11 +2330,11 @@ struct Event {
     customReservedRawData2 @126 :Data;
 
     # *********** Custom: reserved for forks ***********
-    customReserved0 @107 :Custom.CustomReserved0;
-    customReserved1 @108 :Custom.CustomReserved1;
-    customReserved2 @109 :Custom.CustomReserved2;
-    customReserved3 @110 :Custom.CustomReserved3;
-    customReserved4 @111 :Custom.CustomReserved4;
+    frogpilotCarControl @107 :Custom.FrogPilotCarControl;
+    frogpilotCarState @108 :Custom.FrogPilotCarState;
+    frogpilotDeviceState @109 :Custom.FrogPilotDeviceState;
+    frogpilotNavigation @110 :Custom.FrogPilotNavigation;
+    frogpilotPlan @111 :Custom.FrogPilotPlan;
     customReserved5 @112 :Custom.CustomReserved5;
     customReserved6 @113 :Custom.CustomReserved6;
     customReserved7 @114 :Custom.CustomReserved7;
