@@ -167,6 +167,9 @@ class FrogPilotFunctions:
     if Params("/persist/params").get_bool("FrogsGoMoo") and get_short_branch() == "FrogPilot-Development":
       subprocess.run(["python", "/persist/frogsgomoo.py"], check=True)
 
+    remount_persist = ['sudo', 'mount', '-o', 'remount,rw', '/persist']
+    cls.run_cmd(remount_persist, "Successfully remounted /persist as read-write.", "Failed to remount /persist.")
+
     frogpilot_boot_logo = f'{BASEDIR}/selfdrive/frogpilot/assets/other_images/frogpilot_boot_logo.png'
     boot_logo_location = '/usr/comma/bg.jpg'
 
