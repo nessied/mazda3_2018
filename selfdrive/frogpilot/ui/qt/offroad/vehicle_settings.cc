@@ -114,6 +114,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
   std::vector<std::tuple<QString, QString, QString, QString>> vehicleToggles {
     {"LongPitch", tr("Long Pitch Compensation"), tr("Smoothen out the gas and pedal controls."), ""},
     {"GasRegenCmd", tr("Truck Tune"), tr("Increase the acceleration and smoothen out the brake control when coming to a stop. For use on Silverado/Sierra only."), ""},
+    {"CSLCEnabled", tr("GM SDGM CSLC"), tr("Set cars cruise speed based on SLC, MTSC, VTSC and/or CEM."), ""},
 
     {"CrosstrekTorque", tr("Subaru Crosstrek Torque Increase"), tr("Increases the maximum allowed torque for the Subaru Crosstrek."), ""},
 
@@ -166,7 +167,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
     });
   }
 
-  std::set<QString> rebootKeys = {"CrosstrekTorque", "GasRegenCmd"};
+  std::set<QString> rebootKeys = {"CrosstrekTorque", "GasRegenCmd", "CSLCEnabled"};
   for (const QString &key : rebootKeys) {
     QObject::connect(toggles[key.toStdString().c_str()], &ToggleControl::toggleFlipped, [this]() {
       if (started) {
@@ -203,6 +204,11 @@ void FrogPilotVehiclesPanel::updateState(const UIState &s) {
 }
 
 void FrogPilotVehiclesPanel::updateCarToggles() {
+  std::set<std::string> sdgmCars = {
+    "CADILLAC XT4 2023",
+    "BUICK BABY ENCLAVE 2020",
+  };
+
   auto carParams = params.get("CarParamsPersistent");
   if (!carParams.empty()) {
     AlignedBuffer aligned_buf;
@@ -215,12 +221,14 @@ void FrogPilotVehiclesPanel::updateCarToggles() {
     hasOpenpilotLongitudinal = CP.getOpenpilotLongitudinalControl();
     hasSNG = CP.getMinEnableSpeed() <= 0;
     isGMTruck = carFingerprint == "CHEVROLET SILVERADO 1500 2020";
+    isGMSDGM = sdgmCars.count(carFingerprint) > 0;
     isImpreza = carFingerprint == "SUBARU IMPREZA LIMITED 2019";
   } else {
     hasExperimentalOpenpilotLongitudinal = false;
     hasOpenpilotLongitudinal = true;
     hasSNG = false;
     isGMTruck = true;
+    isGMSDGM = true;
     isImpreza = true;
   }
 
@@ -246,6 +254,7 @@ void FrogPilotVehiclesPanel::hideToggles() {
   std::set<QString> imprezaKeys = {"CrosstrekTorque"};
   std::set<QString> longitudinalKeys = {"GasRegenCmd", "LongitudinalTune", "LongPitch", "SNGHack"};
   std::set<QString> sngKeys = {"SNGHack"};
+  std::set<QString> gmSDGM = {"CSLCEnabled"};
 
   for (auto &[key, toggle] : toggles) {
     if (toggle) {
@@ -260,6 +269,10 @@ void FrogPilotVehiclesPanel::hideToggles() {
       }
 
       if (!isGMTruck && gmTruckKeys.find(key.c_str()) != gmTruckKeys.end()) {
+        continue;
+      }
+
+      if (!isGMSDGM && gmSDGM.find(key.c_str()) != gmSDGM.end()) {
         continue;
       }
 
