@@ -46,8 +46,10 @@ class FrogPilotPlanner:
       self.cem.update(carState, controlsState.enabled, frogpilotNavigation, modelData, radarState, road_curvature, self.t_follow, v_ego, frogpilot_toggles)
 
     if radarState.leadOne.status and self.CP.openpilotLongitudinalControl:
-      base_jerk = get_jerk_factor(controlsState.personality)
-      base_t_follow = get_T_FOLLOW(controlsState.personality)
+      base_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
+                                  frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
+      base_t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
+                                   frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
       self.jerk, self.t_follow = self.update_follow_values(base_jerk, radarState, base_t_follow, v_ego, v_lead, frogpilot_toggles)
     else:
       self.t_follow = get_T_FOLLOW(controlsState.personality)
