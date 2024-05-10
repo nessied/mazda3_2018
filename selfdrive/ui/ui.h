@@ -113,6 +113,10 @@ typedef enum UIStatus {
   STATUS_DISENGAGED,
   STATUS_OVERRIDE,
   STATUS_ENGAGED,
+
+  // FrogPilot statuses
+  STATUS_ALWAYS_ON_LATERAL_ACTIVE,
+
 } UIStatus;
 
 enum PrimeType {
@@ -129,6 +133,9 @@ const QColor bg_colors [] = {
   [STATUS_DISENGAGED] = QColor(0x17, 0x33, 0x49, 0xc8),
   [STATUS_OVERRIDE] = QColor(0x91, 0x9b, 0x95, 0xf1),
   [STATUS_ENGAGED] = QColor(0x17, 0x86, 0x44, 0xf1),
+
+  // FrogPilot colors
+  [STATUS_ALWAYS_ON_LATERAL_ACTIVE] = QColor(0x0a, 0xba, 0xb5, 0xf1),
 };
 
 static std::map<cereal::ControlsState::AlertStatus, QColor> alert_colors = {
@@ -172,12 +179,14 @@ typedef struct UIScene {
   uint64_t started_frame;
 
   // FrogPilot variables
+  bool always_on_lateral_active;
   bool enabled;
   bool experimental_mode;
   bool map_open;
   bool online;
   bool parked;
   bool right_hand_drive;
+  bool show_aol_status_bar;
   bool tethering_enabled;
 
   int alert_size;
