@@ -18,6 +18,8 @@ struct FrogPilotCarState @0xaedffd8f31e7b55d {
       lkas @0;
     }
   }
+
+  distanceLongPressed @1 :Bool;
 }
 
 struct FrogPilotDeviceState @0xf35cc4560bbf6ec2 {

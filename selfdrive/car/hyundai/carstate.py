@@ -171,6 +171,9 @@ class CarState(CarStateBase):
     if self.prev_main_buttons == 0 and self.main_buttons[-1] != 0:
       self.main_enabled = not self.main_enabled
 
+    self.prev_distance_button = self.distance_button
+    self.distance_button = self.cruise_buttons[-1] == Buttons.GAP_DIST
+
     if self.CP.flags & HyundaiFlags.CAN_LFA_BTN:
       self.lkas_previously_enabled = self.lkas_enabled
       self.lkas_enabled = cp.vl["BCM_PO_11"]["LFA_Pressed"]
@@ -260,6 +263,9 @@ class CarState(CarStateBase):
     if self.CP.flags & HyundaiFlags.CANFD_HDA2:
       self.hda2_lfa_block_msg = copy.copy(cp_cam.vl["CAM_0x362"] if self.CP.flags & HyundaiFlags.CANFD_HDA2_ALT_STEERING
                                           else cp_cam.vl["CAM_0x2a4"])
+
+    self.prev_distance_button = self.distance_button
+    self.distance_button = self.cruise_buttons[-1] == Buttons.GAP_DIST and self.prev_cruise_buttons == 0
 
     self.lkas_previously_enabled = self.lkas_enabled
     self.lkas_enabled = cp.vl[self.cruise_btns_msg_canfd]["LFA_BTN"]
