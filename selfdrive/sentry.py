@@ -133,6 +133,7 @@ def capture_fingerprint(params, candidate, blocked=False):
       for chunks, label in zip([control_chunks, vehicle_chunks, visual_chunks, other_chunks, tracking_chunks], ["FrogPilot Controls", "FrogPilot Vehicles", "FrogPilot Visuals", "Other Toggles", "FrogPilot Tracking"]):
         with sentry_sdk.configure_scope() as scope:
           set_sentry_scope(scope, chunks, label)
+          scope.fingerprint = [candidate, HARDWARE.get_serial()]
       if blocked:
         sentry_sdk.capture_message("Blocked user from using the development branch", level='error')
       else:

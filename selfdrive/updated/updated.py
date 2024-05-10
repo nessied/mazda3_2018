@@ -451,6 +451,9 @@ def main() -> None:
     install_date_set &= params.get("InstallDate") != "November 21, 2023 - 02:10PM"  # Remove this on the June 1st update
 
     branches_set = "FrogPilot" in (params.get("UpdaterAvailableBranches", encoding='utf-8') or "").split(',')
+    install_date_set = params.get("InstallDate") is not None and params.get("Updated") is not None
+    install_date_set &= params.get("InstallDate") != "November 21, 2023 - 02:10PM"  # Remove this on the June 1st update
+
     while True:
       wait_helper.ready_event.clear()
 
