@@ -92,6 +92,14 @@ class FrogPilotPlanner:
     else:
       self.min_accel = ACCEL_MIN
 
+    check_lane_width = frogpilot_toggles.lane_detection
+    if check_lane_width and v_ego >= LANE_CHANGE_SPEED_MIN:
+      self.lane_width_left = float(calculate_lane_width(modelData.laneLines[0], modelData.laneLines[1], modelData.roadEdges[0]))
+      self.lane_width_right = float(calculate_lane_width(modelData.laneLines[3], modelData.laneLines[2], modelData.roadEdges[1]))
+    else:
+      self.lane_width_left = 0
+      self.lane_width_right = 0
+
     road_curvature = calculate_road_curvature(modelData, v_ego)
 
     if frogpilot_toggles.conditional_experimental_mode:
