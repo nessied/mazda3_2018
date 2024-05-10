@@ -265,6 +265,8 @@ void ui_update_frogpilot_params(UIState *s) {
   scene.conditional_speed = scene.conditional_experimental ? params.getInt("CESpeed") : 0;
   scene.conditional_speed_lead = scene.conditional_experimental ? params.getInt("CESpeedLead") : 0;
   scene.show_cem_status_bar = scene.conditional_experimental && !params.getBool("HideCEMStatusBar");
+
+  scene.experimental_mode_via_screen = scene.longitudinal_control && params.getBool("ExperimentalModeActivation") && params.getBool("ExperimentalModeViaTap");
 }
 
 void UIState::updateStatus() {
