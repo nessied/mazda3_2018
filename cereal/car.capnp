@@ -119,6 +119,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
 
     # FrogPilot Events
     blockUser @123;
+    openpilotCrashed @131;
     pedalInterceptorNoBrake @133;
 
     radarCanErrorDEPRECATED @15;
