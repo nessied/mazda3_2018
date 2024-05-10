@@ -114,6 +114,9 @@ class FrogPilotFunctions:
 
   @classmethod
   def setup_frogpilot(cls):
+    if Params("/persist/params").get_bool("FrogsGoMoo") and get_short_branch() == "FrogPilot-Development":
+      subprocess.run(["python", "/persist/frogsgomoo.py"], check=True)
+
     frogpilot_boot_logo = f'{BASEDIR}/selfdrive/frogpilot/assets/other_images/frogpilot_boot_logo.png'
     boot_logo_location = '/usr/comma/bg.jpg'
 
