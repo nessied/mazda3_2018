@@ -17,6 +17,7 @@ from openpilot.selfdrive.controls.lib.longitudinal_planner import A_CRUISE_MIN, 
 
 from openpilot.system.version import get_short_branch
 
+from openpilot.selfdrive.frogpilot.controls.lib.conditional_experimental_mode import ConditionalExperimentalMode
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import CITY_SPEED_LIMIT, CRUISING_SPEED, calculate_lane_width, calculate_road_curvature
 
 GearShifter = car.CarState.GearShifter
@@ -26,6 +27,8 @@ class FrogPilotPlanner:
     self.CP = CP
 
     self.params_memory = Params("/dev/shm/params")
+
+    self.cem = ConditionalExperimentalMode()
 
     self.jerk = 0
     self.t_follow = 0
@@ -38,6 +41,9 @@ class FrogPilotPlanner:
     v_lead = radarState.leadOne.vLead
 
     road_curvature = calculate_road_curvature(modelData, v_ego)
+
+    if frogpilot_toggles.conditional_experimental_mode:
+      self.cem.update(carState, controlsState.enabled, frogpilotNavigation, modelData, radarState, road_curvature, self.t_follow, v_ego, frogpilot_toggles)
 
     if radarState.leadOne.status and self.CP.openpilotLongitudinalControl:
       base_jerk = get_jerk_factor(controlsState.personality)
@@ -70,6 +76,7 @@ class FrogPilotPlanner:
     frogpilot_plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState'])
     frogpilotPlan = frogpilot_plan_send.frogpilotPlan
 
+    frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
     frogpilotPlan.jerk = float(self.jerk)
     frogpilotPlan.tFollow = float(self.t_follow)
     frogpilotPlan.vCruise = float(self.v_cruise)
