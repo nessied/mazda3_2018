@@ -42,6 +42,7 @@ struct FrogPilotPlan @0x80ae746ee2596b11 {
   jerk @7 :Float32;
   maxAcceleration @10 :Float32;
   minAcceleration @11 :Float32;
+  redLight @12 :Bool;
   slcOverridden @15 :Bool;
   slcOverriddenSpeed @16 :Float64;
   slcSpeedLimit @17 :Float64;
