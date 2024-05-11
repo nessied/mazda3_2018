@@ -276,6 +276,10 @@ void ui_update_frogpilot_params(UIState *s) {
 
   scene.disable_smoothing_mtsc = params.getBool("MTSCEnabled") && params.getBool("DisableMTSCSmoothing");
   scene.experimental_mode_via_screen = scene.longitudinal_control && params.getBool("ExperimentalModeActivation") && params.getBool("ExperimentalModeViaTap");
+
+  bool quality_of_life_controls = params.getBool("QOLControls");
+  scene.onroad_distance_button = scene.longitudinal_control && quality_of_life_controls && params.getBool("OnroadDistanceButton");
+  scene.use_kaofui_icons = scene.onroad_distance_button && params.getBool("KaofuiIcons");
 }
 
 void UIState::updateStatus() {

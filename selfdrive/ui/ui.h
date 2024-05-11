@@ -189,6 +189,7 @@ typedef struct UIScene {
   bool experimental_mode_via_screen;
   bool map_open;
   bool online;
+  bool onroad_distance_button;
   bool parked;
   bool right_hand_drive;
   bool show_aol_status_bar;
@@ -196,6 +197,7 @@ typedef struct UIScene {
   bool tethering_enabled;
   bool traffic_mode;
   bool traffic_mode_active;
+  bool use_kaofui_icons;
 
   float adjusted_cruise;
 

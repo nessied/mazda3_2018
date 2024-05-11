@@ -399,7 +399,7 @@ class CarInterfaceBase(ABC):
     if ret.cruiseState.speedCluster == 0:
       ret.cruiseState.speedCluster = ret.cruiseState.speed
 
-    distance_button = self.CS.distance_button
+    distance_button = self.CS.distance_button or self.params_memory.get_bool("OnroadDistanceButtonPressed")
     fp_ret.distanceLongPressed = self.frogpilot_distance_functions(distance_button, self.prev_distance_button, frogpilot_variables)
     self.prev_distance_button = distance_button
 
