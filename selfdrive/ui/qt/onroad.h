@@ -246,6 +246,7 @@ private:
   float speedConversion;
 
   int alertSize;
+  int cameraView;
   int conditionalStatus;
   int currentHolidayTheme;
   int customColors;
