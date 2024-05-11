@@ -125,7 +125,7 @@ class FrogPilotPlanner:
 
     road_curvature = calculate_road_curvature(modelData, v_ego)
 
-    if frogpilot_toggles.conditional_experimental_mode:
+    if frogpilot_toggles.conditional_experimental_mode or frogpilot_toggles.green_light_alert:
       self.cem.update(carState, controlsState.enabled, frogpilotNavigation, self.lead_one, modelData, road_curvature, self.t_follow, v_ego, frogpilot_toggles)
 
     if self.lead_one.status and self.CP.openpilotLongitudinalControl:
@@ -277,6 +277,8 @@ class FrogPilotPlanner:
     frogpilotPlan.minAcceleration = self.min_accel
     frogpilotPlan.tFollow = float(self.t_follow)
     frogpilotPlan.vCruise = float(self.v_cruise)
+
+    frogpilotPlan.redLight = self.cem.red_light_detected
 
     frogpilotPlan.slcOverridden = bool(self.override_slc)
     frogpilotPlan.slcOverriddenSpeed = float(self.overridden_speed)
