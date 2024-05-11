@@ -957,7 +957,7 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
 
   // Paint adjacent lane paths
   if (scene.adjacent_path && (laneWidthLeft != 0 || laneWidthRight != 0)) {
-    QString unit_d = is_metric ? tr(" meters") : tr(" feet");
+    QString unit_d = is_metric || scene.use_si ? tr(" meters") : tr(" feet");
 
     float minLaneWidth = laneDetectionWidth * 0.5;
     float maxLaneWidth = laneDetectionWidth * 1.5;
@@ -1605,17 +1605,19 @@ void AnnotatedCameraWidget::drawLeadInfo(QPainter &p) {
   distanceConversion = 1.0f;
   speedConversion = 1.0f;
 
-  if (is_metric) {
-    leadSpeedUnit = tr("kph");
-    speedConversion = MS_TO_KPH;
-  } else {
-    accelerationUnit = tr(" ft/s²");
-    leadDistanceUnit = tr(mapOpen ? "ft" : "feet");
-    leadSpeedUnit = tr("mph");
+  if (!scene.use_si) {
+    if (is_metric) {
+      leadSpeedUnit = tr("kph");
+      speedConversion = MS_TO_KPH;
+    } else {
+      accelerationUnit = tr(" ft/s²");
+      leadDistanceUnit = tr(mapOpen ? "ft" : "feet");
+      leadSpeedUnit = tr("mph");
 
-    accelerationConversion = METER_TO_FOOT;
-    distanceConversion = METER_TO_FOOT;
-    speedConversion = MS_TO_MPH;
+      accelerationConversion = METER_TO_FOOT;
+      distanceConversion = METER_TO_FOOT;
+      speedConversion = MS_TO_MPH;
+    }
   }
 
   double acceleration = std::round(scene.acceleration * 100) / 100;
