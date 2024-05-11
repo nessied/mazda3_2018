@@ -194,6 +194,7 @@ typedef struct UIScene {
   bool conditional_experimental;
   bool disable_smoothing_mtsc;
   bool disable_smoothing_vtsc;
+  bool dynamic_path_width;
   bool enabled;
   bool experimental_mode;
   bool experimental_mode_via_screen;
@@ -210,6 +211,7 @@ typedef struct UIScene {
   bool lead_info;
   bool live_valid;
   bool map_open;
+  bool model_ui;
   bool numerical_temp;
   bool online;
   bool onroad_distance_button;
