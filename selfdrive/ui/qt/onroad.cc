@@ -677,6 +677,22 @@ void AnnotatedCameraWidget::drawLaneLines(QPainter &painter, const UIState *s) {
     paintLane(painter, scene.track_adjacent_vertices[5], laneWidthRight, blindSpotRight);
   }
 
+  // Paint blindspot path
+  if (scene.blind_spot_path) {
+    QLinearGradient bs(0, height(), 0, 0);
+    bs.setColorAt(0.0, QColor::fromHslF(0 / 360., 0.75, 0.50, 0.6));
+    bs.setColorAt(0.5, QColor::fromHslF(0 / 360., 0.75, 0.50, 0.4));
+    bs.setColorAt(1.0, QColor::fromHslF(0 / 360., 0.75, 0.50, 0.2));
+
+    painter.setBrush(bs);
+    if (blindSpotLeft) {
+      painter.drawPolygon(scene.track_adjacent_vertices[4]);
+    }
+    if (blindSpotRight) {
+      painter.drawPolygon(scene.track_adjacent_vertices[5]);
+    }
+  }
+
   painter.restore();
 }
 
