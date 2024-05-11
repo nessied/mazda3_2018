@@ -38,6 +38,8 @@ A_CRUISE_MAX_VALS_SPORT = [3.5, 3.5, 3.3, 2.8, 1.5, 1.0, .75, .6, .38, .2]
 
 TRAFFIC_MODE_BP = [0., CITY_SPEED_LIMIT]
 
+TARGET_LAT_A = 1.9  # m/s^2
+
 def get_min_accel_eco(v_ego):
   return interp(v_ego, A_CRUISE_MIN_BP_CUSTOM, A_CRUISE_MIN_VALS_ECO)
 
@@ -67,11 +69,12 @@ class FrogPilotPlanner:
     self.mtsc_target = 0
     self.slc_target = 0
     self.t_follow = 0
+    self.vtsc_target = 0
 
   def update(self, carState, controlsState, frogpilotCarControl, frogpilotCarState, frogpilotNavigation, liveLocationKalman, modelData, radarState, frogpilot_toggles):
     v_cruise_kph = min(controlsState.vCruise, V_CRUISE_UNSET)
     v_cruise = v_cruise_kph * CV.KPH_TO_MS
-    v_cruise_changed = self.mtsc_target < v_cruise
+    v_cruise_changed = (self.mtsc_target or self.vtsc_target) < v_cruise
 
     v_ego = max(carState.vEgo, 0)
     v_lead = self.lead_one.vLead
@@ -214,7 +217,17 @@ class FrogPilotPlanner:
     else:
       self.slc_target = v_cruise
 
-    targets = [self.mtsc_target, max(self.overridden_speed, self.slc_target) - v_ego_diff]
+    # Pfeiferj's Vision Turn Controller
+    if frogpilot_toggles.vision_turn_controller and v_ego > CRUISING_SPEED and enabled:
+      adjusted_road_curvature = road_curvature * frogpilot_toggles.curve_sensitivity
+      adjusted_target_lat_a = TARGET_LAT_A * frogpilot_toggles.turn_aggressiveness
+
+      self.vtsc_target = (adjusted_target_lat_a / adjusted_road_curvature)**0.5
+      self.vtsc_target = np.clip(self.vtsc_target, CRUISING_SPEED, v_cruise)
+    else:
+      self.vtsc_target = v_cruise
+
+    targets = [self.mtsc_target, max(self.overridden_speed, self.slc_target) - v_ego_diff, self.vtsc_target]
     filtered_targets = [target if target > CRUISING_SPEED else v_cruise for target in targets]
 
     return min(filtered_targets)
@@ -224,7 +237,7 @@ class FrogPilotPlanner:
     frogpilot_plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState'])
     frogpilotPlan = frogpilot_plan_send.frogpilotPlan
 
-    frogpilotPlan.adjustedCruise = float(self.mtsc_target * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
+    frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
     frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
     frogpilotPlan.jerk = float(self.jerk)
     frogpilotPlan.minAcceleration = self.min_accel
@@ -237,5 +250,7 @@ class FrogPilotPlanner:
     frogpilotPlan.slcSpeedLimit = self.slc_target
     frogpilotPlan.slcSpeedLimitOffset = SpeedLimitController.offset
     frogpilotPlan.unconfirmedSlcSpeedLimit = SpeedLimitController.desired_speed_limit
+
+    frogpilotPlan.vtscControllingCurve = bool(self.mtsc_target > self.vtsc_target)
 
     pm.send('frogpilotPlan', frogpilot_plan_send)
