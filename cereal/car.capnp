@@ -119,6 +119,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
 
     # FrogPilot Events
     blockUser @123;
+    goatSteerSaturated @125;
     greenLight @126;
     laneChangeBlockedLoud @128;
     leadDeparting @129;
@@ -419,6 +420,9 @@ struct CarControl {
       prompt @6;
       promptRepeat @7;
       promptDistracted @8;
+
+      # Other
+      goat @16;
     }
   }
 
