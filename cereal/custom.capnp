@@ -33,6 +33,7 @@ struct FrogPilotNavigation @0xda96579883444c35 {
 struct FrogPilotPlan @0x80ae746ee2596b11 {
   conditionalExperimental @3 :Bool;
   jerk @7 :Float32;
+  maxAcceleration @10 :Float32;
   tFollow @20 :Float32;
   vCruise @22 :Float32;
 }
