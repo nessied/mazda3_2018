@@ -159,6 +159,7 @@ private:
   int alertSize;
   int conditionalStatus;
 
+  inline QColor blueColor(int alpha = 255) { return QColor(0, 150, 255, alpha); }
   inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
 
 protected:
