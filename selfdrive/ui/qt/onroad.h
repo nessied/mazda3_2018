@@ -154,8 +154,12 @@ private:
   bool showConditionalExperimentalStatusBar;
   bool trafficModeActive;
 
+  float cruiseAdjustment;
+
   int alertSize;
   int conditionalStatus;
+
+  inline QColor greenColor(int alpha = 242) { return QColor(23, 134, 68, alpha); }
 
 protected:
   void paintGL() override;
