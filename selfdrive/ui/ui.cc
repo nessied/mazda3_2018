@@ -228,6 +228,7 @@ static void update_state(UIState *s) {
   }
   if (sm.updated("frogpilotPlan")) {
     auto frogpilotPlan = sm["frogpilotPlan"].getFrogpilotPlan();
+    scene.adjusted_cruise = frogpilotPlan.getAdjustedCruise();
   }
   if (sm.updated("liveLocationKalman")) {
     auto liveLocationKalman = sm["liveLocationKalman"].getLiveLocationKalman();
@@ -267,6 +268,7 @@ void ui_update_frogpilot_params(UIState *s) {
   scene.conditional_speed_lead = scene.conditional_experimental ? params.getInt("CESpeedLead") : 0;
   scene.show_cem_status_bar = scene.conditional_experimental && !params.getBool("HideCEMStatusBar");
 
+  scene.disable_smoothing_mtsc = params.getBool("MTSCEnabled") && params.getBool("DisableMTSCSmoothing");
   scene.experimental_mode_via_screen = scene.longitudinal_control && params.getBool("ExperimentalModeActivation") && params.getBool("ExperimentalModeViaTap");
 }
 
