@@ -37,18 +37,26 @@ struct FrogPilotNavigation @0xda96579883444c35 {
 }
 
 struct FrogPilotPlan @0x80ae746ee2596b11 {
+  accelerationJerk @0 :Float32;
+  accelerationJerkStock @1 :Float32;
   adjustedCruise @2 :Float64;
   conditionalExperimental @3 :Bool;
+  desiredFollowDistance @4 :Int16;
+  egoJerk @5 :Float32;
+  egoJerkStock @6 :Float32;
   jerk @7 :Float32;
   laneWidthLeft @8 :Float32;
   laneWidthRight @9 :Float32;
   maxAcceleration @10 :Float32;
   minAcceleration @11 :Float32;
   redLight @12 :Bool;
+  safeObstacleDistance @13 :Int16;
+  safeObstacleDistanceStock @14 :Int16;
   slcOverridden @15 :Bool;
   slcOverriddenSpeed @16 :Float64;
   slcSpeedLimit @17 :Float64;
   slcSpeedLimitOffset @18 :Float32;
+  stoppedEquivalenceFactor @19 :Int16;
   tFollow @20 :Float32;
   unconfirmedSlcSpeedLimit @21 :Float64;
   vCruise @22 :Float32;

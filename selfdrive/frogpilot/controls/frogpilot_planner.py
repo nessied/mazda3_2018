@@ -64,6 +64,7 @@ class FrogPilotPlanner:
 
     self.override_slc = False
 
+    self.base_jerk = 0
     self.jerk = 0
     self.overridden_speed = 0
     self.mtsc_target = 0
@@ -115,17 +116,28 @@ class FrogPilotPlanner:
 
     if self.lead_one.status and self.CP.openpilotLongitudinalControl:
       if frogpilotCarControl.trafficModeActive:
-        base_jerk = interp(v_ego, TRAFFIC_MODE_BP, frogpilot_toggles.traffic_mode_jerk)
+        self.base_jerk = interp(v_ego, TRAFFIC_MODE_BP, frogpilot_toggles.traffic_mode_jerk)
         base_t_follow = interp(v_ego, TRAFFIC_MODE_BP, frogpilot_toggles.traffic_mode_t_follow)
       else:
-        base_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
-                                    frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
+        self.base_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
+                                         frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
         base_t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
                                      frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
 
-      self.jerk, self.t_follow = self.update_follow_values(base_jerk, self.lead_one, base_t_follow, frogpilotCarControl.trafficModeActive, v_ego, v_lead, frogpilot_toggles)
+      self.jerk, self.t_follow = self.update_follow_values(self.base_jerk, self.lead_one, base_t_follow, frogpilotCarControl.trafficModeActive, v_ego, v_lead, frogpilot_toggles)
+
+      self.safe_obstacle_distance = int(np.mean(get_safe_obstacle_distance(v_ego, self.t_follow)))
+      self.safe_obstacle_distance_stock = int(np.mean(get_safe_obstacle_distance(v_ego, base_t_follow)))
+      self.stopped_equivalence_factor = int(np.mean(get_stopped_equivalence_factor(v_lead)))
     else:
-      self.t_follow = get_T_FOLLOW(controlsState.personality)
+      self.jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
+                                  frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
+      self.t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
+                                   frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
+
+      self.safe_obstacle_distance = 0
+      self.safe_obstacle_distance_stock = 0
+      self.stopped_equivalence_factor = 0
 
     if frogpilot_toggles.radarless_model:
       model_leads = list(modelData.leadsV3)
@@ -237,9 +249,17 @@ class FrogPilotPlanner:
     frogpilot_plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState'])
     frogpilotPlan = frogpilot_plan_send.frogpilotPlan
 
+    frogpilotPlan.accelerationJerk = A_CHANGE_COST * float(self.jerk)
+    frogpilotPlan.accelerationJerkStock = A_CHANGE_COST * float(self.base_jerk)
     frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
     frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
+    frogpilotPlan.desiredFollowDistance = self.safe_obstacle_distance - self.stopped_equivalence_factor
+    frogpilotPlan.egoJerk = J_EGO_COST * float(self.jerk)
+    frogpilotPlan.egoJerkStock = J_EGO_COST * float(self.base_jerk)
     frogpilotPlan.jerk = float(self.jerk)
+    frogpilotPlan.safeObstacleDistance = self.safe_obstacle_distance
+    frogpilotPlan.safeObstacleDistanceStock = self.safe_obstacle_distance_stock
+    frogpilotPlan.stoppedEquivalenceFactor = self.stopped_equivalence_factor
     frogpilotPlan.laneWidthLeft = self.lane_width_left
     frogpilotPlan.laneWidthRight = self.lane_width_right
     frogpilotPlan.minAcceleration = self.min_accel
