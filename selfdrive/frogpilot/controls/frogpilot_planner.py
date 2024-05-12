@@ -145,6 +145,10 @@ class FrogPilotPlanner:
 
       self.acceleration_jerk, self.speed_jerk, self.t_follow = self.update_follow_values(self.base_acceleration_jerk, self.base_speed_jerk, base_t_follow,
                                                                                          frogpilotCarControl.trafficModeActive, v_ego, v_lead, frogpilot_toggles)
+
+      self.safe_obstacle_distance = int(np.mean(get_safe_obstacle_distance(v_ego, self.t_follow)))
+      self.safe_obstacle_distance_stock = int(np.mean(get_safe_obstacle_distance(v_ego, base_t_follow)))
+      self.stopped_equivalence_factor = int(np.mean(get_stopped_equivalence_factor(v_lead)))
     else:
       self.base_acceleration_jerk, self.base_speed_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities,
                                                                           frogpilot_toggles.aggressive_jerk_acceleration, frogpilot_toggles.aggressive_jerk_speed,
@@ -154,6 +158,10 @@ class FrogPilotPlanner:
 
       self.t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
                                    frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
+
+      self.safe_obstacle_distance = 0
+      self.safe_obstacle_distance_stock = 0
+      self.stopped_equivalence_factor = 0
 
     if frogpilot_toggles.radarless_model:
       model_leads = list(modelData.leadsV3)
@@ -271,12 +279,16 @@ class FrogPilotPlanner:
     frogpilotPlan.accelerationJerkStock = A_CHANGE_COST * float(self.base_acceleration_jerk)
     frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
     frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
+    frogpilotPlan.desiredFollowDistance = self.safe_obstacle_distance - self.stopped_equivalence_factor
     frogpilotPlan.egoJerk = J_EGO_COST * float(self.speed_jerk)
     frogpilotPlan.egoJerkStock = J_EGO_COST * float(self.base_speed_jerk)
     frogpilotPlan.laneWidthLeft = self.lane_width_left
     frogpilotPlan.laneWidthRight = self.lane_width_right
     frogpilotPlan.maxAcceleration = self.max_accel
     frogpilotPlan.minAcceleration = self.min_accel
+    frogpilotPlan.safeObstacleDistance = self.safe_obstacle_distance
+    frogpilotPlan.safeObstacleDistanceStock = self.safe_obstacle_distance_stock
+    frogpilotPlan.stoppedEquivalenceFactor = self.stopped_equivalence_factor
     frogpilotPlan.tFollow = float(self.t_follow)
     frogpilotPlan.vCruise = float(self.v_cruise)
 
