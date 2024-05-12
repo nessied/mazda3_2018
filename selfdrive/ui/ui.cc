@@ -235,6 +235,8 @@ static void update_state(UIState *s) {
   if (sm.updated("frogpilotPlan")) {
     auto frogpilotPlan = sm["frogpilotPlan"].getFrogpilotPlan();
     scene.adjusted_cruise = frogpilotPlan.getAdjustedCruise();
+    scene.speed_limit = frogpilotPlan.getSlcSpeedLimit();
+    scene.speed_limit_offset = frogpilotPlan.getSlcSpeedLimitOffset();
   }
   if (sm.updated("liveLocationKalman")) {
     auto liveLocationKalman = sm["liveLocationKalman"].getLiveLocationKalman();
@@ -282,6 +284,11 @@ void ui_update_frogpilot_params(UIState *s) {
   scene.use_kaofui_icons = scene.onroad_distance_button && params.getBool("KaofuiIcons");
   scene.reverse_cruise = quality_of_life_controls && params.getBool("ReverseCruise");
   scene.reverse_cruise_ui = scene.reverse_cruise && params.getBool("ReverseCruiseUI");
+
+  scene.speed_limit_controller = scene.longitudinal_control && params.getBool("SpeedLimitController");
+  scene.show_slc_offset = scene.speed_limit_controller && params.getBool("ShowSLCOffset");
+  scene.show_slc_offset_ui = scene.speed_limit_controller && params.getBool("ShowSLCOffsetUI");
+  scene.use_vienna_slc_sign = scene.speed_limit_controller && params.getBool("UseVienna");
 }
 
 void UIState::updateStatus() {

@@ -20,6 +20,7 @@ from openpilot.system.version import get_short_branch
 from openpilot.selfdrive.frogpilot.controls.lib.conditional_experimental_mode import ConditionalExperimentalMode
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import CITY_SPEED_LIMIT, CRUISING_SPEED, calculate_lane_width, calculate_road_curvature
 from openpilot.selfdrive.frogpilot.controls.lib.map_turn_speed_controller import MapTurnSpeedController
+from openpilot.selfdrive.frogpilot.controls.lib.speed_limit_controller import SpeedLimitController
 
 GearShifter = car.CarState.GearShifter
 
@@ -61,6 +62,7 @@ class FrogPilotPlanner:
 
     self.jerk = 0
     self.mtsc_target = 0
+    self.slc_target = 0
     self.t_follow = 0
 
   def update(self, carState, controlsState, frogpilotCarControl, frogpilotCarState, frogpilotNavigation, liveLocationKalman, modelData, radarState, frogpilot_toggles):
@@ -181,7 +183,14 @@ class FrogPilotPlanner:
     else:
       self.mtsc_target = v_cruise
 
-    targets = [self.mtsc_target]
+    # Pfeiferj's Speed Limit Controller
+    if frogpilot_toggles.speed_limit_controller:
+      SpeedLimitController.update(frogpilotNavigation.navigationSpeedLimit, v_ego, frogpilot_toggles)
+      self.slc_target = SpeedLimitController.desired_speed_limit
+    else:
+      self.slc_target = v_cruise
+
+    targets = [self.mtsc_target, self.slc_target - v_ego_diff]
     filtered_targets = [target if target > CRUISING_SPEED else v_cruise for target in targets]
 
     return min(filtered_targets)
@@ -198,5 +207,8 @@ class FrogPilotPlanner:
     frogpilotPlan.maxAcceleration = self.max_accel
     frogpilotPlan.tFollow = float(self.t_follow)
     frogpilotPlan.vCruise = float(self.v_cruise)
+
+    frogpilotPlan.slcSpeedLimit = self.slc_target
+    frogpilotPlan.slcSpeedLimitOffset = SpeedLimitController.offset
 
     pm.send('frogpilotPlan', frogpilot_plan_send)

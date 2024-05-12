@@ -31,6 +31,7 @@ struct FrogPilotDeviceState @0xf35cc4560bbf6ec2 {
 struct FrogPilotNavigation @0xda96579883444c35 {
   approachingIntersection @0 :Bool;
   approachingTurn @1 :Bool;
+  navigationSpeedLimit @2 :Float32;
 }
 
 struct FrogPilotPlan @0x80ae746ee2596b11 {
@@ -39,6 +40,8 @@ struct FrogPilotPlan @0x80ae746ee2596b11 {
   jerk @7 :Float32;
   maxAcceleration @10 :Float32;
   minAcceleration @11 :Float32;
+  slcSpeedLimit @17 :Float64;
+  slcSpeedLimitOffset @18 :Float32;
   tFollow @20 :Float32;
   vCruise @22 :Float32;
 }
