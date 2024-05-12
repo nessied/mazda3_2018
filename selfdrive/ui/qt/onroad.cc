@@ -250,6 +250,33 @@ void OnroadWindow::paintEvent(QPaintEvent *event) {
       blindspot_frames = 0;
     }
   }
+
+  if (scene.show_steering) {
+    QLinearGradient gradient(rect.topLeft(), rect.bottomLeft());
+    gradient.setColorAt(0.0, QColor(201, 34, 49, 255));
+    gradient.setColorAt(0.25, QColor(218, 111, 37, 241));
+    gradient.setColorAt(0.5, QColor(255, 246, 0, 255));
+    gradient.setColorAt(0.75, QColor(23, 134, 68, 242));
+    gradient.setColorAt(1.0, QColor(23, 134, 68, 242));
+
+    QBrush brush(gradient);
+    int fillWidth = UI_BORDER_SIZE;
+
+    steer = 0.10 * scene.steer + 0.90 * steer;
+    int visibleHeight = rect.height() * steer;
+
+    if (scene.steering_angle_deg < 0) {
+      QRect leftRect(rect.x(), rect.y() + rect.height() - visibleHeight, fillWidth, visibleHeight);
+      p.fillRect(leftRect, brush);
+      QRect leftRectHidden(rect.x(), rect.y(), fillWidth, rect.height() - visibleHeight);
+      p.fillRect(leftRectHidden, QColor(bg.red(), bg.green(), bg.blue(), 255));
+    } else if (scene.steering_angle_deg > 0) {
+      QRect rightRect(rect.x() + rect.width() - fillWidth, rect.y() + rect.height() - visibleHeight, fillWidth, visibleHeight);
+      p.fillRect(rightRect, brush);
+      QRect rightRectHidden(rect.x() + rect.width() - fillWidth, rect.y(), fillWidth, rect.height() - visibleHeight);
+      p.fillRect(rightRectHidden, QColor(bg.red(), bg.green(), bg.blue(), 255));
+    }
+  }
 }
 
 // ***** onroad widgets *****
