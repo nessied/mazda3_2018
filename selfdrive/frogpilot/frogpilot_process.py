@@ -17,6 +17,7 @@ from openpilot.system.hardware import HARDWARE
 from openpilot.selfdrive.frogpilot.controls.frogpilot_planner import FrogPilotPlanner
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_functions import FrogPilotFunctions
 from openpilot.selfdrive.frogpilot.controls.lib.frogpilot_variables import FrogPilotVariables
+from openpilot.selfdrive.frogpilot.controls.lib.model_manager import DEFAULT_MODEL, DEFAULT_MODEL_NAME, download_model, populate_models
 
 WIFI = log.DeviceState.NetworkType.wifi
 
@@ -41,6 +42,8 @@ def github_pinged(url="https://github.com", timeout=5):
 
 def time_checks(automatic_updates, deviceState, params):
   if github_pinged():
+    populate_models()
+
     screen_off = deviceState.screenBrightnessPercent == 0
     wifi_connection = deviceState.networkType == WIFI
 
@@ -58,6 +61,7 @@ def frogpilot_thread(frogpilot_toggles):
   CP = None
 
   first_run = True
+  model_list_empty = params.get("AvailableModelsNames", encoding='utf-8') is None
   time_validated = system_time_valid()
 
   pm = messaging.PubMaster(['frogpilotPlan'])
@@ -82,9 +86,16 @@ def frogpilot_thread(frogpilot_toggles):
                                  sm['frogpilotNavigation'], sm['liveLocationKalman'], sm['modelV2'], sm['radarState'], frogpilot_toggles)
         frogpilot_planner.publish(sm, pm, frogpilot_toggles)
 
+    if params_memory.get("ModelToDownload", encoding='utf-8') is not None and github_pinged():
+      download_model()
+
     if FrogPilotVariables.toggles_updated:
       FrogPilotVariables.update_frogpilot_params(started)
       frogpilot_toggles = FrogPilotVariables.toggles
+
+      if not frogpilot_toggles.model_selector:
+        params.put("Model", DEFAULT_MODEL)
+        params.put("ModelName", DEFAULT_MODEL_NAME)
 
       if not started:
         frogpilot_functions.backup_toggles()
@@ -94,9 +105,10 @@ def frogpilot_thread(frogpilot_toggles):
       if not time_validated:
         continue
 
-    if datetime.datetime.now().second == 0 or first_run or params_memory.get_bool("ManualUpdateInitiated"):
-      if not started:
+    if datetime.datetime.now().second == 0 or first_run or model_list_empty or params_memory.get_bool("ManualUpdateInitiated"):
+      if not started or model_list_empty:
         time_checks(frogpilot_toggles.automatic_updates, deviceState, params)
+        model_list_empty = params.get("AvailableModelsNames", encoding='utf-8') is None
 
       first_run = False
 
