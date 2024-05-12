@@ -100,7 +100,7 @@ class FrogPilotPlanner:
     else:
       self.min_accel = ACCEL_MIN
 
-    check_lane_width = frogpilot_toggles.lane_detection
+    check_lane_width = frogpilot_toggles.adjacent_lanes or frogpilot_toggles.lane_detection
     if check_lane_width and v_ego >= LANE_CHANGE_SPEED_MIN:
       self.lane_width_left = float(calculate_lane_width(modelData.laneLines[0], modelData.laneLines[1], modelData.roadEdges[0]))
       self.lane_width_right = float(calculate_lane_width(modelData.laneLines[3], modelData.laneLines[2], modelData.roadEdges[1]))
@@ -240,6 +240,8 @@ class FrogPilotPlanner:
     frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if frogpilot_toggles.is_metric else CV.MS_TO_MPH))
     frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
     frogpilotPlan.jerk = float(self.jerk)
+    frogpilotPlan.laneWidthLeft = self.lane_width_left
+    frogpilotPlan.laneWidthRight = self.lane_width_right
     frogpilotPlan.minAcceleration = self.min_accel
     frogpilotPlan.maxAcceleration = self.max_accel
     frogpilotPlan.tFollow = float(self.t_follow)
