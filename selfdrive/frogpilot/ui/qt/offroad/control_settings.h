@@ -66,6 +66,7 @@ private:
   bool hasOpenpilotLongitudinal;
   bool hasPCMCruise;
   bool hasDashSpeedLimits;
+  bool isGM;
   bool isMetric = params.getBool("IsMetric");
   bool isRelease;
   bool isToyota;

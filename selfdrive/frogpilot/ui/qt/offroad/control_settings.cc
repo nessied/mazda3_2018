@@ -608,7 +608,7 @@ FrogPilotControlsPanel::FrogPilotControlsPanel(SettingsWindow *parent) : FrogPil
             modifiedQolKeys.erase("SetSpeedOffset");
           }
 
-          if (!isToyota) {
+          if (!isToyota && !isGM) {
             modifiedQolKeys.erase("MapGears");
           }
 
@@ -920,6 +920,7 @@ void FrogPilotControlsPanel::updateCarToggles() {
     hasNNFFLog = checkNNFFLogFileExists(carFingerprint);
     hasOpenpilotLongitudinal = CP.getOpenpilotLongitudinalControl() && !params.getBool("DisableOpenpilotLongitudinal");
     hasPCMCruise = CP.getPcmCruise();
+    isGM = carName == "gm";
     isToyota = carName == "toyota";
     steerRatioStock = CP.getSteerRatio();
 
@@ -933,6 +934,7 @@ void FrogPilotControlsPanel::updateCarToggles() {
     hasNNFFLog = true;
     hasOpenpilotLongitudinal = true;
     hasPCMCruise = true;
+    isGM = true;
     isToyota = true;
   }
 
