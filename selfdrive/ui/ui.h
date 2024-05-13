@@ -199,6 +199,7 @@ typedef struct UIScene {
   bool online;
   bool onroad_distance_button;
   bool parked;
+  bool pedals_on_ui;
   bool reverse_cruise;
   bool reverse_cruise_ui;
   bool right_hand_drive;
@@ -209,6 +210,7 @@ typedef struct UIScene {
   bool speed_limit_changed;
   bool speed_limit_controller;
   bool speed_limit_overridden;
+  bool standstill;
   bool tethering_enabled;
   bool traffic_mode;
   bool traffic_mode_active;
