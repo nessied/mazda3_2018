@@ -111,8 +111,8 @@ class FrogPilotVariables:
     toggles.relaxed_jerk_speed = self.params.get_int("RelaxedJerkSpeed") / 100 if relaxed_profile else 1.0
     toggles.relaxed_follow = self.params.get_float("RelaxedFollow") if relaxed_profile else 1.75
     traffic_profile = toggles.custom_personalities and self.params.get_bool("TrafficPersonalityProfile")
-    toggles.traffic_mode_jerk_acceleration = [self.params.get_int("TrafficJerkAcceleration") / 100, toggles.aggressive_jerk_acceleration] if traffic_profile else [0.5, 0.5]
-    toggles.traffic_mode_jerk_speed = [self.params.get_int("TrafficJerkSpeed") / 100, toggles.aggressive_jerk_speed] if traffic_profile else [0.75, 0.5]
+    toggles.traffic_mode_jerk_acceleration = [self.params.get_int("TrafficJerkAcceleration") / 100.0, toggles.aggressive_jerk_acceleration] if traffic_profile else [0.5, 0.5]
+    toggles.traffic_mode_jerk_speed = [self.params.get_int("TrafficJerkSpeed") / 100.0, toggles.aggressive_jerk_speed] if traffic_profile else [0.75, 0.5]
     toggles.traffic_mode_t_follow = [self.params.get_float("TrafficFollow"), toggles.aggressive_follow] if traffic_profile else [0.5, 1.0]
 
     toggles.experimental_mode_via_press = openpilot_longitudinal and self.params.get_bool("ExperimentalModeActivation")
