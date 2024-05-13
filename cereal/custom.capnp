@@ -21,6 +21,9 @@ struct FrogPilotNavigation @0xda96579883444c35 {
 }
 
 struct FrogPilotPlan @0x80ae746ee2596b11 {
+  jerk @7 :Float32;
+  tFollow @20 :Float32;
+  vCruise @22 :Float32;
 }
 
 struct CustomReserved5 @0xa5cd762cd951a455 {
