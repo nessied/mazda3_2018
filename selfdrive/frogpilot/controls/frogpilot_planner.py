@@ -34,6 +34,8 @@ A_CRUISE_MAX_VALS_ECO = [3.5, 3.2, 2.3, 2.0, 1.15, .80, .58, .36, .30, .091]
 A_CRUISE_MIN_VALS_SPORT = [-0.50, -0.52, -0.55, -0.57, -0.60]
 A_CRUISE_MAX_VALS_SPORT = [3.5, 3.5, 3.3, 2.8, 1.5, 1.0, .75, .6, .38, .2]
 
+TRAFFIC_MODE_BP = [0., CITY_SPEED_LIMIT]
+
 def get_min_accel_eco(v_ego):
   return interp(v_ego, A_CRUISE_MIN_BP_CUSTOM, A_CRUISE_MIN_VALS_ECO)
 
@@ -88,18 +90,23 @@ class FrogPilotPlanner:
       self.cem.update(carState, controlsState.enabled, frogpilotNavigation, modelData, radarState, road_curvature, self.t_follow, v_ego, frogpilot_toggles)
 
     if radarState.leadOne.status and self.CP.openpilotLongitudinalControl:
-      base_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
-                                  frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
-      base_t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
-                                   frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
-      self.jerk, self.t_follow = self.update_follow_values(base_jerk, radarState, base_t_follow, v_ego, v_lead, frogpilot_toggles)
+      if frogpilotCarControl.trafficModeActive:
+        base_jerk = interp(v_ego, TRAFFIC_MODE_BP, frogpilot_toggles.traffic_mode_jerk)
+        base_t_follow = interp(v_ego, TRAFFIC_MODE_BP, frogpilot_toggles.traffic_mode_t_follow)
+      else:
+        base_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_jerk,
+                                    frogpilot_toggles.standard_jerk, frogpilot_toggles.relaxed_jerk, controlsState.personality)
+        base_t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
+                                     frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
+
+      self.jerk, self.t_follow = self.update_follow_values(base_jerk, radarState, base_t_follow, frogpilotCarControl.trafficModeActive, v_ego, v_lead, frogpilot_toggles)
     else:
       self.t_follow = get_T_FOLLOW(controlsState.personality)
 
     self.v_cruise = self.update_v_cruise(carState, controlsState, controlsState.enabled, frogpilotCarState, frogpilotNavigation, liveLocationKalman, modelData, road_curvature, v_cruise, v_ego, frogpilot_toggles)
 
-  def update_follow_values(self, jerk, radarState, t_follow, v_ego, v_lead, frogpilot_toggles):
-    increased_distance = frogpilot_toggles.increased_stopping_distance
+  def update_follow_values(self, jerk, radarState, t_follow, trafficModeActive, v_ego, v_lead, frogpilot_toggles):
+    increased_distance = frogpilot_toggles.increased_stopping_distance if not trafficModeActive else 0
     lead_distance = radarState.leadOne.dRel - increased_distance
     stopping_distance = STOP_DISTANCE + increased_distance
 
