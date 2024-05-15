@@ -27,10 +27,25 @@ def github_pinged(url="https://github.com", timeout=5):
   except (urllib.error.URLError, socket.timeout, http.client.RemoteDisconnected):
     return False
 
-def time_checks(deviceState, params):
+def automatic_update_check(params):
+  update_available = params.get_bool("UpdaterFetchAvailable")
+  update_ready = params.get_bool("UpdateAvailable")
+  update_state = params.get("UpdaterState", encoding='utf8')
+
+  if update_ready:
+    HARDWARE.reboot()
+  elif update_available:
+    os.system("pkill -SIGHUP -f selfdrive.updated.updated")
+  elif update_state == "idle":
+    os.system("pkill -SIGUSR1 -f selfdrive.updated.updated")
+
+def time_checks(automatic_updates, deviceState, params):
   if github_pinged():
     screen_off = deviceState.screenBrightnessPercent == 0
     wifi_connection = deviceState.networkType == WIFI
+
+    if automatic_updates and screen_off and wifi_connection:
+      automatic_update_check(params)
 
 def frogpilot_thread(frogpilot_toggles):
   config_realtime_process(5, Priority.CTRL_LOW)
@@ -76,9 +91,9 @@ def frogpilot_thread(frogpilot_toggles):
       if not time_validated:
         continue
 
-    if datetime.datetime.now().second == 0 or first_run:
+    if datetime.datetime.now().second == 0 or first_run or params_memory.get_bool("ManualUpdateInitiated"):
       if not started:
-        time_checks(deviceState, params)
+        time_checks(frogpilot_toggles.automatic_updates, deviceState, params)
 
       first_run = False
 
