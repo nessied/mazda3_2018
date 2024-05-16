@@ -212,7 +212,7 @@ class CAR(Platforms):
   )
   CHEVROLET_TRAVERSE = GMPlatformConfig(
     [GMCarDocs("Chevrolet Traverse 2023", "Driver Assist Package")],
-    CarSpecs(mass=1955, wheelbase=3.07, steerRatio=17.3, centerToFrontRatio=0.4),
+    CarSpecs(mass=1955, wheelbase=3.07, steerRatio=17.9, centerToFrontRatio=0.4),
   )
 
 
