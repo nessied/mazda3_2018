@@ -49,13 +49,26 @@ class FrogPilotPlanner:
       self.cem.update(carState, controlsState.enabled, frogpilotNavigation, modelData, radarState, road_curvature, self.t_follow, v_ego, frogpilot_toggles)
 
     if radarState.leadOne.status and self.CP.openpilotLongitudinalControl:
-      self.base_acceleration_jerk, self.base_speed_jerk = get_jerk_factor(controlsState.personality)
-      base_t_follow = get_T_FOLLOW(controlsState.personality)
+      self.base_acceleration_jerk, self.base_speed_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities,
+                                                                          frogpilot_toggles.aggressive_jerk_acceleration, frogpilot_toggles.aggressive_jerk_speed,
+                                                                          frogpilot_toggles.standard_jerk_acceleration, frogpilot_toggles.standard_jerk_speed,
+                                                                          frogpilot_toggles.relaxed_jerk_acceleration, frogpilot_toggles.relaxed_jerk_speed,
+                                                                          controlsState.personality)
+
+      base_t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
+                                   frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
+
       self.acceleration_jerk, self.speed_jerk, self.t_follow = self.update_follow_values(self.base_acceleration_jerk, self.base_speed_jerk, base_t_follow,
                                                                                          frogpilotCarControl.trafficModeActive, v_ego, v_lead, frogpilot_toggles)
     else:
-      self.acceleration_jerk, self.speed_jerk = get_jerk_factor(controlsState.personality)
-      self.t_follow = get_T_FOLLOW(controlsState.personality)
+      self.base_acceleration_jerk, self.base_speed_jerk = get_jerk_factor(frogpilot_toggles.custom_personalities,
+                                                                          frogpilot_toggles.aggressive_jerk_acceleration, frogpilot_toggles.aggressive_jerk_speed,
+                                                                          frogpilot_toggles.standard_jerk_acceleration, frogpilot_toggles.standard_jerk_speed,
+                                                                          frogpilot_toggles.relaxed_jerk_acceleration, frogpilot_toggles.relaxed_jerk_speed,
+                                                                          controlsState.personality)
+
+      self.t_follow = get_T_FOLLOW(frogpilot_toggles.custom_personalities, frogpilot_toggles.aggressive_follow,
+                                   frogpilot_toggles.standard_follow, frogpilot_toggles.relaxed_follow, controlsState.personality)
 
     self.v_cruise = self.update_v_cruise(carState, controlsState, controlsState.enabled, frogpilotCarState, frogpilotNavigation, liveLocationKalman, modelData, road_curvature, v_cruise, v_ego, frogpilot_toggles)
 
