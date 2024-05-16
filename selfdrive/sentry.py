@@ -42,6 +42,14 @@ def set_tag(key: str, value: str) -> None:
   sentry_sdk.set_tag(key, value)
 
 
+def sentry_metrics() -> None:
+  sentry_sdk.metrics.set(
+    key="total_users",
+    value=1,
+    unit="users"
+  )
+
+
 def init(project: SentryProject) -> bool:
   # forks like to mess with this, so double check
   comma_remote = is_comma_remote() and "commaai" in get_origin()
@@ -72,5 +80,8 @@ def init(project: SentryProject) -> bool:
 
   if project == SentryProject.SELFDRIVE:
     sentry_sdk.Hub.current.start_session()
+
+  if env == "Staging":
+    sentry_metrics()
 
   return True
