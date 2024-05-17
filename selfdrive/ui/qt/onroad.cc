@@ -1646,7 +1646,10 @@ void DistanceButton::buttonReleased() {
 }
 
 void DistanceButton::updateState() {
-  if (trafficModeActive != scene.traffic_mode_active || personality != static_cast<int>(scene.personality) && !trafficModeActive) {
+  bool stateChanged = (trafficModeActive != scene.traffic_mode_active) ||
+                      (personality != static_cast<int>(scene.personality) && !trafficModeActive);
+
+  if (stateChanged) {
     transitionTimer.restart();
   }
 
@@ -1668,7 +1671,7 @@ void DistanceButton::paintEvent(QPaintEvent *event) {
   int profile = trafficModeActive ? 0 : personality + 1;
   auto &[profileImage, profileText] = scene.use_kaofui_icons ? profile_data_kaofui[profile] : profile_data[profile];
 
-  if (textOpacity != 0.0) {
+  if (textOpacity > 0.0) {
     p.setOpacity(textOpacity);
     p.setFont(InterFont(40, QFont::Bold));
     p.setPen(Qt::white);
@@ -1676,8 +1679,12 @@ void DistanceButton::paintEvent(QPaintEvent *event) {
     p.drawText(textRect, Qt::AlignCenter, profileText);
   }
 
-  if (imageOpacity != 0.0) {
+  if (imageOpacity > 0.0) {
     drawIcon(p, QPoint((btn_size / 2) * 1.25, btn_size / 2 + 95), profileImage, Qt::transparent, imageOpacity);
+  }
+
+  if (elapsed > (textDuration + fadeDuration)) {
+    transitionTimer.restart();
   }
 }
 
