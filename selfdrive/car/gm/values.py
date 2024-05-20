@@ -257,6 +257,11 @@ class CAR(Platforms):
     [GMCarDocs("Chevrolet TRAX 2024")],
     CarSpecs(mass=1365, wheelbase=2.7, steerRatio=16.4, centerToFrontRatio=0.4),
   )
+  TRAVERSE = GMPlatformConfig(
+    "CHEVROLET TRAVERSE 2023",
+    [GMCarDocs("Chevrolet Traverse 2023", "Driver Assist Package")],
+    CarSpecs(mass=1955, wheelbase=3.07, steerRatio=17.9, centerToFrontRatio=0.4),
+  )
 
 
 class CruiseButtons:
@@ -342,7 +347,7 @@ EV_CAR = {CAR.VOLT, CAR.BOLT_EUV, CAR.VOLT_CC, CAR.BOLT_CC}
 CC_ONLY_CAR = {CAR.VOLT_CC, CAR.BOLT_CC, CAR.EQUINOX_CC, CAR.SUBURBAN_CC, CAR.YUKON_CC, CAR.CT6_CC, CAR.TRAILBLAZER_CC, CAR.MALIBU_CC}
 
 # We're integrated at the Safety Data Gateway Module on these cars
-SDGM_CAR = {CAR.XT4}
+SDGM_CAR = {CAR.XT4, CAR.TRAVERSE}
 
 # Slow acceleration cars
 SLOW_ACC = {CAR.SILVERADO}

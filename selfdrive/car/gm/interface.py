@@ -284,6 +284,11 @@ class CarInterface(CarInterfaceBase):
     elif candidate == CAR.TRAX:
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
+    elif candidate == CAR.TRAVERSE:
+      ret.steerActuatorDelay = 0.2
+      ret.minSteerSpeed = 10 * CV.KPH_TO_MS
+      CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
     if ret.enableGasInterceptor:
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
