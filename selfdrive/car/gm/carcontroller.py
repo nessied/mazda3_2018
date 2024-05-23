@@ -2,7 +2,7 @@ from cereal import car
 from openpilot.common.conversions import Conversions as CV
 from openpilot.common.numpy_fast import interp, clip
 from openpilot.common.realtime import DT_CTRL
-from openpilot.common.params_pyx import Params
+from openpilot.common.params import Params
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits, create_gas_interceptor_command
 from openpilot.selfdrive.car.gm import gmcan

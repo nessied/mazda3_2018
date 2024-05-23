@@ -64,6 +64,7 @@ class Controls:
     self.card = CarD(CI)
 
     self.params = Params()
+    self.params_memory = Params("/dev/shm/params")
 
     with car.CarParams.from_bytes(self.params.get("CarParams", block=True)) as msg:
       # TODO: this shouldn't need to be a builder
@@ -511,6 +512,11 @@ class Controls:
 
   def state_control(self, CS):
     """Given the state, this function returns a CarControl packet"""
+
+    if any(be.type in (ButtonType.accelCruise, ButtonType.resumeCruise) for be in CS.buttonEvents):
+      self.params_memory.put_bool("ResumePrevButton", True)
+    elif any(be.type in (ButtonType.decelCruise, ButtonType.setCruise) for be in CS.buttonEvents):
+      self.params_memory.put_bool("ResumePrevButton", False)
 
     # Update VehicleModel
     lp = self.sm['liveParameters']
