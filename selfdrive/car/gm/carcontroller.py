@@ -170,10 +170,6 @@ class CarController(CarControllerBase):
 
         idx = (self.frame // 4) % 4
 
-        if self.CP.flags & GMFlags.CC_LONG.value:
-          if CC.longActive and CS.out.vEgo > self.CP.minEnableSpeed:
-            # Using extend instead of append since the message is only sent intermittently
-            can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
         if self.CP.enableGasInterceptor:
           can_sends.append(create_gas_interceptor_command(self.packer_pt, interceptor_gas_cmd, idx))
         if self.CP.carFingerprint not in CC_ONLY_CAR:
@@ -200,6 +196,12 @@ class CarController(CarControllerBase):
       else:
         # to keep accel steady for logs when not sending gas
         accel += self.accel_g
+
+      if self.frame % 3 == 0:
+        if self.CP.flags & GMFlags.CC_LONG.value:
+          if CC.longActive and CS.out.vEgo > self.CP.minEnableSpeed:
+            # Using extend instead of append since the message is only sent intermittently
+            can_sends.extend(gmcan.create_gm_cc_spam_command(self.packer_pt, self, CS, actuators))
 
       # Radar needs to know current speed and yaw rate (50hz),
       # and that ADAS is alive (10hz)
