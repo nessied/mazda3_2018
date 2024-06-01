@@ -269,6 +269,8 @@ class PlatformConfig(Freezable):
 
   flags: int = 0
 
+  #platform_str: str | None = None
+
   def __hash__(self) -> int:
     return hash(self.platform_str)
 
