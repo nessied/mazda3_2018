@@ -57,7 +57,16 @@ class CarState(CarStateBase):
     self.acc_distance = cp_cam.vl["FSM1"]["ACC_Distance"]
 
     # gear
-    ret.gearShifter = car.CarState.GearShifter.drive  # TODO
+    #ret.gearShifter = car.CarState.GearShifter.drive  # TODO
+
+    # gear VP
+    gear = cp.vl["Gear_Info"]["Gear"]
+    if gear == 50:
+      ret.gearShifter = car.CarState.GearShifter.park
+    elif gear == 44 and ret.vEgo < 3:
+      ret.gearShifter = car.CarState.GearShifter.reverse
+    else:
+      ret.gearShifter = car.CarState.GearShifter.drive
 
     # safety
     ret.stockFcw = False  # TODO
@@ -91,6 +100,7 @@ class CarState(CarStateBase):
       ("ACC_Speed", 50),
       ("MiscCarInfo", 25),
       ("Doors", 20),
+      ("Gear_Info", 20),
     ]
 
     return CANParser(DBC[CP.carFingerprint]["pt"], messages, 0)
