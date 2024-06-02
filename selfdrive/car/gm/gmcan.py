@@ -1,5 +1,6 @@
 from openpilot.selfdrive.car import make_can_msg
 from openpilot.selfdrive.car.gm.values import CAR
+from openpilot.common.conversions import Conversions as CV
 
 
 def create_buttons(packer, bus, idx, button):
@@ -52,7 +53,11 @@ def create_adas_keepalive(bus):
   return [make_can_msg(0x409, dat, bus), make_can_msg(0x40a, dat, bus)]
 
 
-def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop):
+def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop, sc):
+  if idx == 0 or sc == False:
+    idx2 = 0
+  else:
+    idx2 = idx*3+4
   values = {
     "GasRegenCmdActive": enabled,
     "RollingCounter": idx,
@@ -62,6 +67,7 @@ def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop):
     "GasRegenAlwaysOne": 1,
     "GasRegenAlwaysOne2": 1,
     "GasRegenAlwaysOne3": 1,
+    "RollingCounter2": idx2,
   }
 
   dat = packer.make_can_msg("ASCMGasRegenCmd", bus, values)[2]
@@ -72,7 +78,7 @@ def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop):
   return packer.make_can_msg("ASCMGasRegenCmd", bus, values)
 
 
-def create_friction_brake_command(packer, bus, apply_brake, idx, enabled, near_stop, at_full_stop, CP):
+def create_friction_brake_command(packer, bus, apply_brake, idx, enabled, near_stop, at_full_stop, CP, sc):
   mode = 0x1
 
   # TODO: Understand this better. Volts and ICE Camera ACC cars are 0x1 when enabled with no brake
@@ -91,6 +97,12 @@ def create_friction_brake_command(packer, bus, apply_brake, idx, enabled, near_s
 
   brake = (0x1000 - apply_brake) & 0xfff
   checksum = (0x10000 - (mode << 12) - brake - idx) & 0xffff
+
+  if sc:
+    if idx == 0:
+      idx = 0
+    else:
+      idx = idx*13+16
 
   values = {
     "RollingCounter": idx,
@@ -171,3 +183,43 @@ def create_lka_icon_command(bus, active, critical, steer):
   else:
     dat = b"\x00\x00\x00"
   return make_can_msg(0x104c006c, dat, bus)
+
+def create_steering_control_sc_a(packer, bus, apply_steer, v_ego, idx, enabled):
+
+  values = {
+    "LKASteeringCmdActive": 1 if enabled else 0,
+    "LKASteeringCmd": apply_steer,
+    "RollingCounter": idx,
+    "SetMe1": 1,
+    "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
+    "LKASMode": 2 if enabled else 0,
+    "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
+  }
+
+  dat = packer.make_can_msg("ASCMALKASteeringCmd", 0, values)[2]
+  # the checksum logic is weird
+  values['LKASteeringCmdChecksum'] = (0x2a +
+                                      sum([i for i in dat][:4]) +
+                                      values['LKASMode']) & 0x3ff
+
+  return packer.make_can_msg("ASCMALKASteeringCmd", bus, values)
+
+def create_steering_control_sc_b(packer, bus, apply_steer, v_ego, idx, enabled):
+
+  values = {
+    "LKASteeringCmdActive": 1 if enabled else 0,
+    "LKASteeringCmd": apply_steer,
+    "RollingCounter": idx,
+    "SetMe1": 1,
+    "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
+    "LKASMode": 2 if enabled else 0,
+    "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
+  }
+
+  dat = packer.make_can_msg("ASCMBLKASteeringCmd", 0, values)[2]
+  # the checksum logic is weird
+  values['LKASteeringCmdChecksum'] = (0x2a +
+                                      sum([i for i in dat][:4]) +
+                                      values['LKASMode']) & 0x3ff
+
+  return packer.make_can_msg("ASCMBLKASteeringCmd", bus, values)

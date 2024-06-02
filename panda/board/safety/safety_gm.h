@@ -23,6 +23,13 @@ const LongitudinalLimits GM_CAM_LONG_LIMITS = {
   .max_brake = 400,
 };
 
+const LongitudinalLimits GM_SC_LONG_LIMITS = {
+  .max_gas = 3400,
+  .min_gas = 1514,
+  .inactive_gas = 1554,
+  .max_brake = 400,
+};
+
 const LongitudinalLimits *gm_long_limits;
 
 const int GM_STANDSTILL_THRSLD = 10;  // 0.311kph
@@ -37,11 +44,15 @@ const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4},  // pt bus
 const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4}, {0x315, 0, 5}, {0x2CB, 0, 8}, {0x370, 0, 6},  // pt bus
                                       {0x184, 2, 8}};  // camera bus
 
+const CanMsg GM_SC_TX_MSGS[] = {{0x2CB, 0, 8}, {0x370, 0, 6}, {0x152, 0, 6}, {0x154, 0, 6},  // pt bus
+                                {0x152, 1, 6}, {0x154, 1, 6}, {0x315, 1, 5}};  // ch bus
+
 // TODO: do checksum and counter checks. Add correct timestep, 0.1s for now.
 RxCheck gm_rx_checks[] = {
   {.msg = {{0x184, 0, 8, .frequency = 10U}, { 0 }, { 0 }}},
   {.msg = {{0x34A, 0, 5, .frequency = 10U}, { 0 }, { 0 }}},
-  {.msg = {{0x1E1, 0, 7, .frequency = 10U}, { 0 }, { 0 }}},
+  {.msg = {{0x1E1, 0, 7, .frequency = 10U},   // Non-SC Car
+           {0x1E1, 2, 7, .frequency = 10U}, { 0 }}}, // SC Car
   {.msg = {{0xBE, 0, 6, .frequency = 10U},    // Volt, Silverado, Acadia Denali
            {0xBE, 0, 7, .frequency = 10U},    // Bolt EUV
            {0xBE, 0, 8, .frequency = 10U}}},  // Escalade
@@ -51,6 +62,7 @@ RxCheck gm_rx_checks[] = {
 
 const uint16_t GM_PARAM_HW_CAM = 1;
 const uint16_t GM_PARAM_HW_CAM_LONG = 2;
+const uint16_t GM_PARAM_HW_SC = 4;
 
 enum {
   GM_BTN_UNPRESS = 1,
@@ -61,15 +73,46 @@ enum {
 
 typedef enum {
   GM_ASCM,
-  GM_CAM
+  GM_CAM,
+  GM_SC
 } GmHardware;
 GmHardware gm_hw = GM_ASCM;
 bool gm_cam_long = false;
 bool gm_pcm_cruise = false;
 
+static void handle_gm_wheel_buttons(const CANPacket_t *to_push) {
+  int button = (GET_BYTE(to_push, 5) & 0x70U) >> 4;
+
+  // enter controls on falling edge of set or rising edge of resume (avoids fault)
+  bool set = (button != GM_BTN_SET) && (cruise_button_prev == GM_BTN_SET);
+  bool res = (button == GM_BTN_RESUME) && (cruise_button_prev != GM_BTN_RESUME);
+  if (set || res) {
+    controls_allowed = true;
+  }
+
+  // exit controls on cancel press
+  if (button == GM_BTN_CANCEL) {
+    controls_allowed = false;
+  }
+
+  cruise_button_prev = button;
+}
+
 static void gm_rx_hook(const CANPacket_t *to_push) {
+  int addr = GET_ADDR(to_push);
+  if (GET_BUS(to_push) == 2U && (gm_hw == GM_SC)) {
+    if (addr == 0x1E1) {
+      // SC buttons are on bus 2
+      handle_gm_wheel_buttons(to_push);
+    }
+
+    if (addr == 0x152) {
+      // ASCMLKASteeringCmd
+      bool stock_ecu_detected = true;
+    }
+  }
+
   if (GET_BUS(to_push) == 0U) {
-    int addr = GET_ADDR(to_push);
 
     if (addr == 0x184) {
       int torque_driver_new = ((GET_BYTE(to_push, 6) & 0x7U) << 8) | GET_BYTE(to_push, 7);
@@ -85,23 +128,9 @@ static void gm_rx_hook(const CANPacket_t *to_push) {
       vehicle_moving = (left_rear_speed > GM_STANDSTILL_THRSLD) || (right_rear_speed > GM_STANDSTILL_THRSLD);
     }
 
-    // ACC steering wheel buttons (GM_CAM is tied to the PCM)
-    if ((addr == 0x1E1) && !gm_pcm_cruise) {
-      int button = (GET_BYTE(to_push, 5) & 0x70U) >> 4;
-
-      // enter controls on falling edge of set or rising edge of resume (avoids fault)
-      bool set = (button != GM_BTN_SET) && (cruise_button_prev == GM_BTN_SET);
-      bool res = (button == GM_BTN_RESUME) && (cruise_button_prev != GM_BTN_RESUME);
-      if (set || res) {
-        controls_allowed = true;
-      }
-
-      // exit controls on cancel press
-      if (button == GM_BTN_CANCEL) {
-        controls_allowed = false;
-      }
-
-      cruise_button_prev = button;
+    // ACC steering wheel buttons (GM_CAM and GM_SDGM are tied to the PCM)
+    if ((addr == 0x1E1) && !gm_pcm_cruise && (gm_hw != GM_SC)) {
+      handle_gm_wheel_buttons(to_push);
     }
 
     // Reference for brake pressed signals:
@@ -110,7 +139,7 @@ static void gm_rx_hook(const CANPacket_t *to_push) {
       brake_pressed = GET_BYTE(to_push, 1) >= 8U;
     }
 
-    if ((addr == 0xC9) && (gm_hw == GM_CAM)) {
+    if ((addr == 0xC9) && ((gm_hw == GM_CAM) || (gm_hw == GM_SC))) {
       brake_pressed = GET_BIT(to_push, 40U);
     }
 
@@ -128,7 +157,7 @@ static void gm_rx_hook(const CANPacket_t *to_push) {
       regen_braking = (GET_BYTE(to_push, 0) >> 4) != 0U;
     }
 
-    bool stock_ecu_detected = (addr == 0x180);  // ASCMLKASteeringCmd
+    bool stock_ecu_detected = ((addr == 0x180) && !(gm_hw == GM_SC));  // ASCMLKASteeringCmd
 
     // Check ASCMGasRegenCmd only if we're blocking it
     if (!gm_pcm_cruise && (addr == 0x2CB)) {
@@ -152,11 +181,35 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
   }
 
   // LKA STEER: safety check
-  if (addr == 0x180) {
+  if ((addr == 0x180) && !(gm_hw == GM_SC)) {
     int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
     desired_torque = to_signed(desired_torque, 11);
 
     bool steer_req = GET_BIT(to_send, 3U);
+
+    if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
+      tx = false;
+    }
+  }
+
+  // SC A LKA STEER: safety check
+  if ((addr == 0x152) && (gm_hw == GM_SC)) {
+    int desired_torque = ((GET_BYTE(to_send, 0) & 0x63U) << 8) + GET_BYTE(to_send, 1);
+    desired_torque = to_signed(desired_torque, 14);
+
+    bool steer_req = GET_BIT(to_send, 7U);
+
+    if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
+      tx = false;
+    }
+  }
+
+    // SC B LKA STEER: safety check
+  if ((addr == 0x154) && (gm_hw == GM_SC)) {
+    int desired_torque = ((GET_BYTE(to_send, 0) & 0x63U) << 8) + GET_BYTE(to_send, 1);
+    desired_torque = to_signed(desired_torque, 14);
+
+    bool steer_req = GET_BIT(to_send, 7U);
 
     if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
       tx = false;
@@ -214,16 +267,27 @@ static int gm_fwd_hook(int bus_num, int addr) {
     }
   }
 
+  if (gm_hw == GM_SC) {
+    if (bus_num == 0) {
+        bus_fwd = 2;
+      }
+    if (bus_num == 2) {
+      bus_fwd = 0;
+    }
+  }
+
   return bus_fwd;
 }
 
 static safety_config gm_init(uint16_t param) {
-  gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GM_ASCM;
+  gm_hw = GET_FLAG(param, GM_PARAM_HW_CAM) ? GM_CAM : GET_FLAG(param, GM_PARAM_HW_SC) ? GM_SC : GM_ASCM;
 
   if (gm_hw == GM_ASCM) {
     gm_long_limits = &GM_ASCM_LONG_LIMITS;
   } else if (gm_hw == GM_CAM) {
     gm_long_limits = &GM_CAM_LONG_LIMITS;
+  } else if (gm_hw == GM_SC) {
+    gm_long_limits = &GM_SC_LONG_LIMITS;
   } else {
   }
 
@@ -235,6 +299,9 @@ static safety_config gm_init(uint16_t param) {
   safety_config ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_ASCM_TX_MSGS);
   if (gm_hw == GM_CAM) {
     ret = gm_cam_long ? BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_LONG_TX_MSGS) : BUILD_SAFETY_CFG(gm_rx_checks, GM_CAM_TX_MSGS);
+  } else if (gm_hw == GM_SC) {
+    ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_SC_TX_MSGS);
+  } else {
   }
   return ret;
 }

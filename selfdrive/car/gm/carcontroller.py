@@ -5,7 +5,7 @@ from openpilot.common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits
 from openpilot.selfdrive.car.gm import gmcan
-from openpilot.selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons
+from openpilot.selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons, SC_CAR
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -46,14 +46,16 @@ class CarController(CarControllerBase):
     hud_v_cruise = hud_control.setSpeed
     if hud_v_cruise > 70:
       hud_v_cruise = 0
+    
+    sc_car = self.CP.carFingerprint in SC_CAR
 
     # Send CAN commands.
     can_sends = []
 
     # Steering (Active: 50Hz, inactive: 10Hz)
-    steer_step = self.params.STEER_STEP if CC.latActive else self.params.INACTIVE_STEER_STEP
+    steer_step = self.params.SC_STEER_STEP if sc_car else self.params.STEER_STEP if CC.latActive else self.params.INACTIVE_STEER_STEP
 
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and not sc_car:
       # Also send at 50Hz:
       # - on startup, first few msgs are blocked
       # - until we're in sync with camera so counters align when relay closes, preventing a fault.
@@ -81,7 +83,13 @@ class CarController(CarControllerBase):
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
-      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      if sc_car:
+        can_sends.append(gmcan.create_steering_control_sc_a(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
+        can_sends.append(gmcan.create_steering_control_sc_b(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
+        can_sends.append(gmcan.create_steering_control_sc_a(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
+        can_sends.append(gmcan.create_steering_control_sc_b(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
+      else:
+        can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
@@ -103,17 +111,17 @@ class CarController(CarControllerBase):
 
         at_full_stop = CC.longActive and CS.out.standstill
         near_stop = CC.longActive and (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE)
-        friction_brake_bus = CanBus.CHASSIS
+        friction_brake_bus = CanBus.SC_CHASSIS if sc_car else CanBus.CHASSIS
         # GM Camera exceptions
         # TODO: can we always check the longControlState?
-        if self.CP.networkLocation == NetworkLocation.fwdCamera:
+        if self.CP.networkLocation == NetworkLocation.fwdCamera and not sc_car:
           at_full_stop = at_full_stop and stopping
           friction_brake_bus = CanBus.POWERTRAIN
 
         # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
-        can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
+        can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop, sc_car))
         can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
-                                                             idx, CC.enabled, near_stop, at_full_stop, self.CP))
+                                                             idx, CC.enabled, near_stop, at_full_stop, self.CP, sc_car))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
@@ -150,7 +158,7 @@ class CarController(CarControllerBase):
           self.last_button_frame = self.frame
           can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.CANCEL))
 
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and not sc_car:
       # Silence "Take Steering" alert sent by camera, forward PSCMStatus with HandsOffSWlDetectionStatus=1
       if self.frame % 10 == 0:
         can_sends.append(gmcan.create_pscm_status(self.packer_pt, CanBus.CAMERA, CS.pscm_status))
