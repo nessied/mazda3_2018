@@ -12,6 +12,7 @@ class CarControllerParams:
   STEER_MAX = 300  # GM limit is 3Nm. Used by carcontroller to generate LKA output
   STEER_STEP = 3  # Active control frames per command (~33hz)
   INACTIVE_STEER_STEP = 10  # Inactive control frames per command (10hz)
+  SC_STEER_STEP = 1
   STEER_DELTA_UP = 10  # Delta rates require review due to observed EPS weakness
   STEER_DELTA_DOWN = 15
   STEER_DRIVER_ALLOWANCE = 65
@@ -44,6 +45,12 @@ class CarControllerParams:
       # Camera transitions to MAX_ACC_REGEN from ZERO_GAS and uses friction brakes instantly
       max_regen_acceleration = 0.
 
+    elif CP.carFingerprint in SC_CAR:
+      self.MAX_GAS = 3400
+      self.MAX_ACC_REGEN = 1514
+      self.INACTIVE_REGEN = 1554
+      max_regen_acceleration = 0.
+    
     else:
       self.MAX_GAS = 3072  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
       self.MAX_ACC_REGEN = 1404  # Max ACC regen is slightly less than max paddle regen
@@ -150,6 +157,10 @@ class CAR(Platforms):
     [GMCarDocs("Chevrolet Trailblazer 2021-22")],
     GMCarSpecs(mass=1345, wheelbase=2.64, steerRatio=16.8, centerToFrontRatio=0.4, tireStiffnessFactor=1.0),
   )
+  CHEVROLET_BOLT_SC = GMPlatformConfig(
+    [GMCarDocs("Chevrolet Bolt EV 2022-23", "Premier or Premier Redline Trim with Super Cruise Package")],
+    GMCarSpecs(mass=1669, wheelbase=2.63779, steerRatio=16.8, centerToFrontRatio=0.4, tireStiffnessFactor=1.0),
+  )
 
 
 class CruiseButtons:
@@ -169,6 +180,7 @@ class AccState:
 class CanBus:
   POWERTRAIN = 0
   OBSTACLE = 1
+  SC_CHASSIS = 1
   CAMERA = 2
   CHASSIS = 2
   LOOPBACK = 128
@@ -224,10 +236,12 @@ FW_QUERY_CONFIG = FwQueryConfig(
   extra_ecus=[(Ecu.fwdCamera, 0x24b, None)],
 )
 
-EV_CAR = {CAR.CHEVROLET_VOLT, CAR.CHEVROLET_BOLT_EUV}
+EV_CAR = {CAR.CHEVROLET_VOLT, CAR.CHEVROLET_BOLT_EUV, CAR.CHEVROLET_BOLT_SC}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.CHEVROLET_BOLT_EUV, CAR.CHEVROLET_SILVERADO, CAR.CHEVROLET_EQUINOX, CAR.CHEVROLET_TRAILBLAZER}
+
+SC_CAR = {CAR.CHEVROLET_BOLT_SC}
 
 STEER_THRESHOLD = 1.0
 
