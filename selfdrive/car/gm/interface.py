@@ -126,6 +126,7 @@ class CarInterface(CarInterfaceBase):
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.radarUnavailable = True  # no radar
       ret.pcmCruise = False
+      ret.openpilotLongitudinalControl = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SC
       ret.minEnableSpeed = -1
       ret.minSteerSpeed = 0 * CV.KPH_TO_MS
