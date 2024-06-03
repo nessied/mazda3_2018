@@ -100,6 +100,7 @@ static void handle_gm_wheel_buttons(const CANPacket_t *to_push) {
 
 static void gm_rx_hook(const CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
+  bool stock_ecu_detected = false;
   if (GET_BUS(to_push) == 2U && (gm_hw == GM_SC)) {
     if (addr == 0x1E1) {
       // SC buttons are on bus 2
@@ -108,7 +109,7 @@ static void gm_rx_hook(const CANPacket_t *to_push) {
 
     if (addr == 0x152) {
       // ASCMLKASteeringCmd
-      bool stock_ecu_detected = true;
+      stock_ecu_detected = true;
     }
   }
 
@@ -157,7 +158,9 @@ static void gm_rx_hook(const CANPacket_t *to_push) {
       regen_braking = (GET_BYTE(to_push, 0) >> 4) != 0U;
     }
 
-    bool stock_ecu_detected = ((addr == 0x180) && !(gm_hw == GM_SC));  // ASCMLKASteeringCmd
+    if (!(gm_hw == GM_SC)){
+      stock_ecu_detected = (addr == 0x180);  // ASCMLKASteeringCmd
+    }
 
     // Check ASCMGasRegenCmd only if we're blocking it
     if (!gm_pcm_cruise && (addr == 0x2CB)) {
