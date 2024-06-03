@@ -144,8 +144,11 @@ class CarController(CarControllerBase):
           can_sends.append(gmcan.create_adas_steering_status(CanBus.OBSTACLE, idx))
           can_sends.append(gmcan.create_adas_accelerometer_speed_status(CanBus.OBSTACLE, CS.out.vEgo, idx))
 
-      if (self.CP.networkLocation == NetworkLocation.gateway or sc_car) and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
+      if self.CP.networkLocation == NetworkLocation.gateway and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
         can_sends += gmcan.create_adas_keepalive(CanBus.POWERTRAIN)
+
+      if sc_car and self.frame % 10 == 0:
+        can_sends += gmcan.create_adas_sc_keepalive(CanBus.POWERTRAIN)
 
     else:
       # While car is braking, cancel button causes ECM to enter a soft disable state with a fault status.
