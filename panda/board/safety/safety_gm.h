@@ -44,7 +44,7 @@ const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4},  // pt bus
 const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4}, {0x315, 0, 5}, {0x2CB, 0, 8}, {0x370, 0, 6},  // pt bus
                                       {0x184, 2, 8}};  // camera bus
 
-const CanMsg GM_SC_TX_MSGS[] = {{0x2CB, 0, 8}, {0x370, 0, 6}, {0x152, 0, 6}, {0x154, 0, 6}, {0x150, 0, 1},  // pt bus
+const CanMsg GM_SC_TX_MSGS[] = {{0x2CB, 0, 8}, {0x370, 0, 6}, {0x152, 0, 6}, {0x154, 0, 6}, {0x150, 0, 1}, {0x409, 0, 7}, {0x40A, 0, 7},  // pt bus
                                 {0x152, 1, 6}, {0x154, 1, 6}, {0x315, 1, 5}};  // ch bus
 
 // TODO: do checksum and counter checks. Add correct timestep, 0.1s for now.
