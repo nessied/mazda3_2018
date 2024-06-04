@@ -39,7 +39,6 @@ class CarState(CarStateBase):
     self.cruise_buttons = cp.vl["ASCMSteeringButton"]["ACCButtons"]
     self.distance_button = cp.vl["ASCMSteeringButton"]["DistanceButton"]
     self.buttons_counter = cp.vl["ASCMSteeringButton"]["RollingCounter"]
-    self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
     # This is to avoid a fault where you engage while still moving backwards after shifting to D.
     # An Equinox has been seen with an unsupported status (3), so only check if either wheel is in reverse (2)
     self.moving_backward = (pt_cp.vl["EBCMWheelSpdRear"]["RLWheelDir"] == 2) or (pt_cp.vl["EBCMWheelSpdRear"]["RRWheelDir"] == 2)
@@ -92,14 +91,26 @@ class CarState(CarStateBase):
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelAngle"]
     ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelRate"]
-    ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
-    ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
-    ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
+    if self.CP.carFingerprint not in SC_CAR:
+      self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
+      ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
+      ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
+      ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
 
-    # 0 inactive, 1 active, 2 temporarily limited, 3 failed
-    self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
-    ret.steerFaultTemporary = self.lkas_status == 2
-    ret.steerFaultPermanent = self.lkas_status == 3
+      # 0 inactive, 1 active, 2 temporarily limited, 3 failed
+      self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
+      ret.steerFaultTemporary = self.lkas_status == 2
+      ret.steerFaultPermanent = self.lkas_status == 3
+    else:
+      self.pscm_status = copy.copy(pt_cp.vl["PSCMSCStatus"])
+      ret.steeringTorque = pt_cp.vl["PSCMSCStatus"]["LKADriverAppldTrq"]
+      ret.steeringTorqueEps = pt_cp.vl["PSCMSCStatus"]["LKATBDTorque"]
+      ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
+
+      # 0 inactive, 1 active, 2 temporarily limited, 3 failed
+      self.lkas_status = pt_cp.vl["PSCMSCStatus"]["LKATorqueDeliveredStatus"]
+      ret.steerFaultTemporary = self.lkas_status in [2, 4, 5, 6, 7]
+      ret.steerFaultPermanent = self.lkas_status == 3
 
     # 1 - open, 0 - closed
     ret.doorOpen = (cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
@@ -158,7 +169,6 @@ class CarState(CarStateBase):
   @staticmethod
   def get_can_parser(CP):
     messages = [
-      ("PSCMStatus", 10),
       ("ESPStatus", 10),
       ("EBCMWheelSpdFront", 20),
       ("EBCMWheelSpdRear", 20),
@@ -169,12 +179,14 @@ class CarState(CarStateBase):
 
     if CP.carFingerprint in SC_CAR:
       messages += [
+        ("PSCMSCStatus", 100),
         ("ECMPRDNL2", 40),
         ("AcceleratorPedal2", 40),
         ("ECMEngineStatus", 80),
       ]
     else:
       messages += [
+        ("PSCMStatus", 10),
         ("ECMPRDNL2", 10),
         ("AcceleratorPedal2", 33),
         ("ECMEngineStatus", 100),
