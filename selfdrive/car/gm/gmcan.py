@@ -52,9 +52,15 @@ def create_adas_keepalive(bus):
   dat = b"\x00\x00\x00\x00\x00\x00\x00"
   return [make_can_msg(0x409, dat, bus), make_can_msg(0x40a, dat, bus)]
 
-def create_adas_sc_keepalive(bus):
-  dat = b"\x00\x00\x00\x00"
-  return [make_can_msg(0x510, dat, bus)]
+def create_adas_sc_keepalive_1(bus):
+  dat = b"\x00\x6C\x00\x00\x00\x00\x00"
+  return [make_can_msg(0x78a, dat, bus), make_can_msg(0x78d, dat, bus)]
+
+def create_adas_sc_keepalive_25(bus):
+  dat = b"\x80\x22\x30\xE0"
+  dat2 = b"\x00\x2c\x03\x00\x00"
+  dat3 = b"\x08\x00\x00\x00\x00\x00\x00\x00"
+  return [make_can_msg(0x365, dat, bus), make_can_msg(0x2cf, dat2, bus), make_can_msg(0x374, dat3, bus)]
 
 
 def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop, sc):
