@@ -76,6 +76,43 @@ def create_adas_sc_keepalive_100(bus):
   dat = b"\x00\x00\x00\x00\x00\x00\x00\x00"
   return [make_can_msg(0x340, dat, bus), make_can_msg(0x341, dat, bus),make_can_msg(0x342, dat, bus)]
 
+def create_adas_sc_keepalive_25_chassis(bus, idx):
+  if idx == 0:
+    dat = b"\x10\x00\xf0\x00\x00"
+    dat2 = b"\x00\x00\x00\x00\x00\x00\x00\x00"
+  elif idx == 1:
+    dat = b"\x10\x00\xef\xff\x01"
+    dat2 = b"\x00\x00\x40\x00\x00\x01\xff\xff"
+  elif idx == 2:
+    dat = b"\x10\x00\xef\xfe\x02"
+    dat2 = b"\x00\x00\x80\x00\x00\x01\xff\xfe"
+  else:
+    dat = b"\x10\x00\xef\xfd\x03"
+    dat2 = b"\x00\x00\xc0\x00\x00\x01\xff\xfd"
+  return [make_can_msg(0x321, dat, bus), make_can_msg(0x325, dat2, bus)]
+
+def create_adas_sc_keepalive_50_chassis(bus, idx):
+  if idx == 0:
+    dat = b"\x00\x00\x00\x00"
+  elif idx == 1:
+    dat = b"\x00\x00\x47\xff"
+  elif idx == 2:
+    dat = b"\x00\x00\x87\xff"
+  else:
+    dat = b"\x00\x00\xc7\xff"
+  return [make_can_msg(0x174, dat, bus)]
+
+def create_adas_sc_keepalive_100_chassis(bus, idx):
+  if idx == 0:
+    dat = b"\x00\x00\x00\x2f"
+  elif idx == 1:
+    dat = b"\x20\x00\x00\x4f"
+  elif idx == 2:
+    dat = b"\x40\x00\x00\x6f"
+  else:
+    dat = b"\x60\x00\x00\x8f"
+  return [make_can_msg(0x178, dat, bus)]
+
 
 def create_gas_regen_command(packer, bus, throttle, idx, enabled, at_full_stop, sc):
   if idx == 0 or sc == False:
