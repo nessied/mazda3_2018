@@ -158,9 +158,19 @@ class CarController(CarControllerBase):
         if self.frame % 100 == 0:
           can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.POWERTRAIN)
           can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.CAMERA)
+        if self.frame % 10 == 0:
+          can_sends += gmcan.create_adas_sc_keepalive_10(CanBus.POWERTRAIN)
+          can_sends += gmcan.create_adas_sc_keepalive_10(CanBus.CAMERA)
         if self.frame % 4 == 0:
           can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.POWERTRAIN)
           can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.CAMERA)
+        if self.frame % 2 == 0:
+          can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.POWERTRAIN)
+          can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.CAMERA)
+        if self.frame % 1 == 0:
+          can_sends += gmcan.create_adas_sc_keepalive_100(CanBus.POWERTRAIN)
+          can_sends += gmcan.create_adas_sc_keepalive_100(CanBus.CAMERA)
+          
 
     else:
       # While car is braking, cancel button causes ECM to enter a soft disable state with a fault status.
