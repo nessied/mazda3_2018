@@ -86,6 +86,8 @@ class CarController(CarControllerBase):
       if sc_car:
         can_sends.append(gmcan.create_steering_control_sc_a(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
         can_sends.append(gmcan.create_steering_control_sc_b(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
+        can_sends.append(gmcan.create_steering_control_sc_a(self.packer_pt, CanBus.CAMERA, apply_steer, CS.out.vEgo, idx, CC.latActive))
+        can_sends.append(gmcan.create_steering_control_sc_b(self.packer_pt, CanBus.CAMERA, apply_steer, CS.out.vEgo, idx, CC.latActive))
         can_sends.append(gmcan.create_steering_control_sc_a(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
         can_sends.append(gmcan.create_steering_control_sc_b(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
       else:
@@ -122,10 +124,15 @@ class CarController(CarControllerBase):
         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop, sc_car))
         can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
                                                              idx, CC.enabled, near_stop, at_full_stop, self.CP, sc_car))
+        if sc_car:
+          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.CAMERA, self.apply_gas, idx, CC.enabled, at_full_stop, sc_car))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
         can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
+                                                            hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
+        if sc_car:
+          can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.CAMERA, CC.enabled,
                                                             hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
 
       # Radar needs to know current speed and yaw rate (50hz),
@@ -150,8 +157,10 @@ class CarController(CarControllerBase):
       if sc_car:
         if self.frame % 100 == 0:
           can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.POWERTRAIN)
+          can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.CAMERA)
         if self.frame % 4 == 0:
           can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.POWERTRAIN)
+          can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.CAMERA)
 
     else:
       # While car is braking, cancel button causes ECM to enter a soft disable state with a fault status.
@@ -173,6 +182,7 @@ class CarController(CarControllerBase):
       # Send Keep Alive
       if self.frame % 10 == 0:
         can_sends.append(gmcan.create_sc_ascm_lkas_status(self.packer_pt, CanBus.POWERTRAIN))
+        can_sends.append(gmcan.create_sc_ascm_lkas_status(self.packer_pt, CanBus.CAMERA))
 
     new_actuators = actuators.as_builder()
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
