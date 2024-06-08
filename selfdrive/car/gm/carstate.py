@@ -91,26 +91,16 @@ class CarState(CarStateBase):
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelAngle"]
     ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelRate"]
-    if self.CP.carFingerprint not in SC_CAR:
-      self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
-      ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
-      ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
-      ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
+    self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
+    ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
+    ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
+    ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
 
-      # 0 inactive, 1 active, 2 temporarily limited, 3 failed
-      self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
-      ret.steerFaultTemporary = self.lkas_status == 2
-      ret.steerFaultPermanent = self.lkas_status == 3
-    else:
-      self.pscm_status = copy.copy(pt_cp.vl["PSCMSCStatus"])
-      ret.steeringTorque = pt_cp.vl["PSCMSCStatus"]["LKADriverAppldTrq"]
-      ret.steeringTorqueEps = pt_cp.vl["PSCMSCStatus"]["LKATBDTorque"]
-      ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
+    # 0 inactive, 1 active, 2 temporarily limited, 3 failed
+    self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
+    ret.steerFaultTemporary = self.lkas_status == 2
+    ret.steerFaultPermanent = self.lkas_status == 3
 
-      # 0 inactive, 1 active, 2 temporarily limited, 3 failed
-      self.lkas_status = pt_cp.vl["PSCMSCStatus"]["LKATorqueDeliveredStatus"]
-      ret.steerFaultTemporary = self.lkas_status in [2, 4, 5, 7]
-      ret.steerFaultPermanent = self.lkas_status in [3, 6]
 
     # 1 - open, 0 - closed
     ret.doorOpen = (cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or
@@ -170,6 +160,7 @@ class CarState(CarStateBase):
   def get_can_parser(CP):
     messages = [
       ("ESPStatus", 10),
+      ("PSCMStatus", 10),
       ("EBCMWheelSpdFront", 20),
       ("EBCMWheelSpdRear", 20),
       ("EBCMFrictionBrakeStatus", 20),
@@ -179,14 +170,12 @@ class CarState(CarStateBase):
 
     if CP.carFingerprint in SC_CAR:
       messages += [
-        ("PSCMSCStatus", 100),
         ("ECMPRDNL2", 40),
         ("AcceleratorPedal2", 40),
         ("ECMEngineStatus", 80),
       ]
     else:
       messages += [
-        ("PSCMStatus", 10),
         ("ECMPRDNL2", 10),
         ("AcceleratorPedal2", 33),
         ("ECMEngineStatus", 100),

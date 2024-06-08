@@ -254,7 +254,7 @@ def create_steering_control_sc_a(packer, bus, apply_steer, v_ego, idx, enabled):
     "RollingCounter": idx,
     "SetMe1": 1,
     "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
-    "LKASMode": 2 if enabled else 0,
+    "LKASMode": 1 if enabled else 0,
     "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
   }
 
@@ -274,7 +274,7 @@ def create_steering_control_sc_b(packer, bus, apply_steer, v_ego, idx, enabled):
     "RollingCounter": idx,
     "SetMe1": 1,
     "LKASVehicleSpeed": abs(v_ego * CV.MS_TO_KPH),
-    "LKASMode": 2 if enabled else 0,
+    "LKASMode": 1 if enabled else 0,
     "LKASteeringCmdChecksum": 0  # assume zero and then manually compute it
   }
 
