@@ -109,8 +109,8 @@ class CarState(CarStateBase):
 
       # 0 inactive, 1 active, 2 temporarily limited, 3 failed
       self.lkas_status = pt_cp.vl["PSCMSCStatus"]["LKATorqueDeliveredStatus"]
-      ret.steerFaultTemporary = self.lkas_status in [2, 4, 5, 6, 7]
-      ret.steerFaultPermanent = self.lkas_status == 3
+      ret.steerFaultTemporary = self.lkas_status in [2, 4, 5, 7]
+      ret.steerFaultPermanent = self.lkas_status in [3, 6]
 
     # 1 - open, 0 - closed
     ret.doorOpen = (cp.vl["BCMDoorBeltStatus"]["FrontLeftDoor"] == 1 or

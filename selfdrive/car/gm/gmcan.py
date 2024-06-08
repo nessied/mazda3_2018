@@ -286,10 +286,10 @@ def create_steering_control_sc_b(packer, bus, apply_steer, v_ego, idx, enabled):
 
   return packer.make_can_msg("ASCMBLKASteeringCmd", bus, values)
 
-def create_sc_ascm_lkas_status(packer, bus):
+def create_sc_ascm_lkas_status(packer, bus, enabled):
 
   values = {
-    "Available": 0
+    "Available": enabled
   }
 
   return packer.make_can_msg("ASCMLKASStatus", bus, values)
