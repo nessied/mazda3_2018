@@ -165,6 +165,8 @@ class CarController(CarControllerBase):
           can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.POWERTRAIN)
           can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.CAMERA)
           can_sends += gmcan.create_adas_sc_keepalive_25_chassis(CanBus.SC_CHASSIS, (self.frame // 4) % 4)
+          can_sends += gmcan.create_adas_2cd_keepalive(self.packer_pt, CanBus.POWERTRAIN, (self.frame // 4) % 4)
+          can_sends += gmcan.create_adas_2cd_keepalive(self.packer_pt, CanBus.CAMERA, (self.frame // 4) % 4)
         if self.frame % 2 == 0:
           can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.POWERTRAIN)
           can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.CAMERA)

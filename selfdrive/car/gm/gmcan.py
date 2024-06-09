@@ -65,8 +65,16 @@ def create_adas_sc_keepalive_25(bus):
   dat = b"\x80\x22\x30\xE0"
   dat2 = b"\x00\x2c\x03\x00\x00"
   dat3 = b"\x08\x00\x00\x00\x00\x00\x00\x00"
-  dat4 = b"\x00\x00\x00\x00\x00"
-  return [make_can_msg(0x365, dat, bus), make_can_msg(0x2cf, dat2, bus), make_can_msg(0x374, dat3, bus), make_can_msg(0x2cd, dat4, bus)]
+  return [make_can_msg(0x365, dat, bus), make_can_msg(0x2cf, dat2, bus), make_can_msg(0x374, dat3, bus)]
+
+def create_adas_2cd_keepalive(packer, bus, idx):
+  values = {
+    "RollingCounter": idx,
+    "SetMe11267": 11267,
+    "5mRC": 5 - idx,
+  }
+
+  return packer.make_can_msg("ASCM_2CD", bus, values)
 
 def create_adas_sc_keepalive_50(bus):
   dat = b"\x00\x00\x00\x00\x00"
