@@ -193,29 +193,17 @@ static bool gm_tx_hook(const CANPacket_t *to_send) {
     }
   }
 
-  // // SC A LKA STEER: safety check
-  // if ((addr == 0x152) && (gm_hw == GM_SC)) {
-  //   int desired_torque = ((GET_BYTE(to_send, 0) & 0x63U) << 8) + GET_BYTE(to_send, 1);
-  //   desired_torque = to_signed(desired_torque, 14);
+  // SC LKA STEER: safety check
+  if (((addr == 0x152) || (addr == 0x154)) && (gm_hw == GM_SC)) {
+    int desired_torque = ((GET_BYTE(to_send, 0) & 0x3f) << 8) + GET_BYTE(to_send, 1);
+    desired_torque = to_signed(desired_torque, 14);
 
-  //   bool steer_req = GET_BIT(to_send, 7U);
+    bool steer_req = GET_BIT(to_send, 7U);
 
-  //   if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
-  //     tx = false;
-  //   }
-  // }
-
-  //   // SC B LKA STEER: safety check
-  // if ((addr == 0x154) && (gm_hw == GM_SC)) {
-  //   int desired_torque = ((GET_BYTE(to_send, 0) & 0x63U) << 8) + GET_BYTE(to_send, 1);
-  //   desired_torque = to_signed(desired_torque, 14);
-
-  //   bool steer_req = GET_BIT(to_send, 7U);
-
-  //   if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
-  //     tx = false;
-  //   }
-  // }
+    if (steer_torque_cmd_checks(desired_torque, steer_req, GM_STEERING_LIMITS)) {
+      tx = false;
+    }
+  }
 
   // GAS/REGEN: safety check
   if (addr == 0x2CB) {
