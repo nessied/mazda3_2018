@@ -44,9 +44,8 @@ const CanMsg GM_CAM_TX_MSGS[] = {{0x180, 0, 4},  // pt bus
 const CanMsg GM_CAM_LONG_TX_MSGS[] = {{0x180, 0, 4}, {0x315, 0, 5}, {0x2CB, 0, 8}, {0x370, 0, 6},  // pt bus
                                       {0x184, 2, 8}};  // camera bus
 
-const CanMsg GM_SC_TX_MSGS[] = {{0x2CB, 0, 8}, {0x370, 0, 6}, {0x152, 0, 6}, {0x154, 0, 6}, {0x150, 0, 1}, {0x78a, 0, 7}, {0x78d, 0, 7}, {0x365, 0, 4}, {0x2cf, 0, 5}, {0x374, 0, 8}, {0x340, 0, 8}, {0x341, 0, 8}, {0x342, 0, 8}, {0x343, 0, 6}, {0x344, 0, 5}, {0x2cd, 0, 5}, {0x510, 0, 4}, // pt bus
-                                {0x152, 1, 6}, {0x154, 1, 6}, {0x315, 1, 5}, {0x174, 1, 4}, {0x178, 1, 4}, {0x321, 1, 5}, {0x325, 1, 8},
-                                {0x2CB, 2, 8}, {0x370, 2, 6}, {0x152, 2, 6}, {0x154, 2, 6}, {0x150, 2, 1}, {0x78a, 2, 7}, {0x78d, 2, 7}, {0x365, 2, 4}, {0x2cf, 2, 5}, {0x374, 2, 8}, {0x340, 2, 8}, {0x341, 2, 8}, {0x342, 2, 8}, {0x343, 2, 6}, {0x344, 2, 5}, {0x2cd, 2, 5}, {0x510, 2, 4}};  // pt bus
+const CanMsg GM_SC_TX_MSGS[] = {{0x152, 0, 6}, {0x154, 0, 6},  // pt bus
+                                 {0x1E1, 2, 7}, {0x184, 2, 8}};  // camera bus
 
 // TODO: do checksum and counter checks. Add correct timestep, 0.1s for now.
 RxCheck gm_rx_checks[] = {
@@ -101,7 +100,7 @@ static void handle_gm_wheel_buttons(const CANPacket_t *to_push) {
 
 static void gm_rx_hook(const CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
-  if (GET_BUS(to_push) == 2U && (gm_hw == GM_SC)) {
+  if (GET_BUS(to_push) == 2U && (gm_hw == GM_SC) && !gm_pcm_cruise) {
     if (addr == 0x1E1) {
       // SC buttons are on bus 2
       handle_gm_wheel_buttons(to_push);
@@ -257,11 +256,15 @@ static int gm_fwd_hook(int bus_num, int addr) {
   }
 
   if (gm_hw == GM_SC) {
+    int bus_fwd = -1;
     if (bus_num == 0) {
         bus_fwd = 2;
       }
     if (bus_num == 2) {
-      bus_fwd = 0;
+      bool block_msg = (addr == 0x152) || (addr == 0x154);
+      if (!block_msg) {
+        bus_fwd = 0;
+      }
     }
   }
 
@@ -283,7 +286,7 @@ static safety_config gm_init(uint16_t param) {
 #ifdef ALLOW_DEBUG
   gm_cam_long = GET_FLAG(param, GM_PARAM_HW_CAM_LONG);
 #endif
-  gm_pcm_cruise = (gm_hw == GM_CAM) && !gm_cam_long;
+  gm_pcm_cruise = ((gm_hw == GM_CAM) && !gm_cam_long) || (gm_hw == GM_SC);
 
   safety_config ret = BUILD_SAFETY_CFG(gm_rx_checks, GM_ASCM_TX_MSGS);
   if (gm_hw == GM_CAM) {

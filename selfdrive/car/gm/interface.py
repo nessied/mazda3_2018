@@ -125,8 +125,8 @@ class CarInterface(CarInterfaceBase):
       ret.experimentalLongitudinalAvailable = False
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.radarUnavailable = True  # no radar
-      ret.pcmCruise = False
-      ret.openpilotLongitudinalControl = True
+      ret.pcmCruise = True
+      ret.openpilotLongitudinalControl = False
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SC
       ret.minEnableSpeed = -1
       ret.minSteerSpeed = 0 * CV.KPH_TO_MS
@@ -241,7 +241,7 @@ class CarInterface(CarInterfaceBase):
     # TODO: verify 17 Volt can enable for the first time at a stop and allow for all GMs
     below_min_enable_speed = ret.vEgo < self.CP.minEnableSpeed or self.CS.moving_backward
     if below_min_enable_speed and not (ret.standstill and ret.brake >= 20 and
-                                       self.CP.networkLocation == NetworkLocation.fwdCamera):
+                                       (self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in SC_CAR)):
       events.add(EventName.belowEngageSpeed)
     if ret.cruiseState.standstill:
       events.add(EventName.resumeRequired)

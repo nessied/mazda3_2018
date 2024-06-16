@@ -86,10 +86,6 @@ class CarController(CarControllerBase):
       if sc_car:
         can_sends.append(gmcan.create_steering_control_sc_a(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
         can_sends.append(gmcan.create_steering_control_sc_b(self.packer_pt, CanBus.POWERTRAIN, apply_steer, CS.out.vEgo, idx, CC.latActive))
-        can_sends.append(gmcan.create_steering_control_sc_a(self.packer_pt, CanBus.CAMERA, apply_steer, CS.out.vEgo, idx, CC.latActive))
-        can_sends.append(gmcan.create_steering_control_sc_b(self.packer_pt, CanBus.CAMERA, apply_steer, CS.out.vEgo, idx, CC.latActive))
-        can_sends.append(gmcan.create_steering_control_sc_a(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
-        can_sends.append(gmcan.create_steering_control_sc_b(self.packer_ch, CanBus.SC_CHASSIS, apply_steer, CS.out.vEgo, idx, CC.latActive))
       else:
         can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
@@ -124,15 +120,10 @@ class CarController(CarControllerBase):
         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop, sc_car))
         can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
                                                              idx, CC.enabled, near_stop, at_full_stop, self.CP, sc_car))
-        if sc_car:
-          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.CAMERA, self.apply_gas, idx, CC.enabled, at_full_stop, sc_car))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
         can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
-                                                            hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
-        if sc_car:
-          can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.CAMERA, CC.enabled,
                                                             hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
 
       # Radar needs to know current speed and yaw rate (50hz),
@@ -153,28 +144,6 @@ class CarController(CarControllerBase):
 
       if self.CP.networkLocation == NetworkLocation.gateway and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
         can_sends += gmcan.create_adas_keepalive(CanBus.POWERTRAIN)
-
-      if sc_car:
-        if self.frame % 100 == 0:
-          can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.POWERTRAIN)
-          can_sends += gmcan.create_adas_sc_keepalive_1(CanBus.CAMERA)
-        if self.frame % 10 == 0:
-          can_sends += gmcan.create_adas_sc_keepalive_10(CanBus.POWERTRAIN)
-          can_sends += gmcan.create_adas_sc_keepalive_10(CanBus.CAMERA)
-        if self.frame % 4 == 0:
-          can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.POWERTRAIN)
-          can_sends += gmcan.create_adas_sc_keepalive_25(CanBus.CAMERA)
-          can_sends += gmcan.create_adas_sc_keepalive_25_chassis(CanBus.SC_CHASSIS, (self.frame // 4) % 4)
-          can_sends.append(gmcan.create_adas_2cd_keepalive(self.packer_pt, CanBus.POWERTRAIN, (self.frame // 4) % 4))
-          can_sends.append(gmcan.create_adas_2cd_keepalive(self.packer_pt, CanBus.CAMERA, (self.frame // 4) % 4))
-        if self.frame % 2 == 0:
-          can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.POWERTRAIN)
-          can_sends += gmcan.create_adas_sc_keepalive_50(CanBus.CAMERA)
-          can_sends += gmcan.create_adas_sc_keepalive_50_chassis(CanBus.SC_CHASSIS, (self.frame // 2) % 4)
-        if self.frame % 1 == 0:
-          can_sends += gmcan.create_adas_sc_keepalive_100(CanBus.POWERTRAIN)
-          can_sends += gmcan.create_adas_sc_keepalive_100(CanBus.CAMERA)
-          can_sends += gmcan.create_adas_sc_keepalive_100_chassis(CanBus.SC_CHASSIS, self.frame % 4)
           
 
     else:
@@ -192,12 +161,6 @@ class CarController(CarControllerBase):
       # Silence "Take Steering" alert sent by camera, forward PSCMStatus with HandsOffSWlDetectionStatus=1
       if self.frame % 10 == 0:
         can_sends.append(gmcan.create_pscm_status(self.packer_pt, CanBus.CAMERA, CS.pscm_status))
-
-    if sc_car:
-      # Send Keep Alive
-      if self.frame % 10 == 0:
-        can_sends.append(gmcan.create_sc_ascm_lkas_status(self.packer_pt, CanBus.POWERTRAIN, CC.enabled))
-        can_sends.append(gmcan.create_sc_ascm_lkas_status(self.packer_pt, CanBus.CAMERA, CC.enabled))
 
     new_actuators = actuators.as_builder()
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
