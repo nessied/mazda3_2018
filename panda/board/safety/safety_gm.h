@@ -256,7 +256,6 @@ static int gm_fwd_hook(int bus_num, int addr) {
   }
 
   if (gm_hw == GM_SC) {
-    int bus_fwd = -1;
     if (bus_num == 0) {
         bus_fwd = 2;
       }
