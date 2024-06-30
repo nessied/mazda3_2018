@@ -27,6 +27,9 @@ def is_tester_present_response(msg: capnp.lib.capnp._DynamicStructReader, subadd
     # success response
     if msg.dat[dat_offset + 1] == (SERVICE_TYPE.TESTER_PRESENT + 0x40):
       return True
+    # GM success response
+    if msg.dat[dat_offset + 1] == (SERVICE_TYPE.TESTER_PRESENT + 0x400):
+      return True
     # error response
     if msg.dat[dat_offset + 1] == 0x7F and msg.dat[dat_offset + 2] == SERVICE_TYPE.TESTER_PRESENT:
       return True
@@ -34,7 +37,7 @@ def is_tester_present_response(msg: capnp.lib.capnp._DynamicStructReader, subadd
 
 
 def get_all_ecu_addrs(logcan: messaging.SubSocket, sendcan: messaging.PubSocket, bus: int, timeout: float = 1, debug: bool = True) -> set[EcuAddrBusType]:
-  addr_list = [0x700 + i for i in range(256)] + [0x18da00f1 + (i << 8) for i in range(256)]
+  addr_list = [0x100 + i for i in range(1792)] + [0x18da00f1 + (i << 8) for i in range(256)]
   queries: set[EcuAddrBusType] = {(addr, None, bus) for addr in addr_list}
   responses = queries
   return get_ecu_addrs(logcan, sendcan, queries, responses, timeout=timeout, debug=debug)
