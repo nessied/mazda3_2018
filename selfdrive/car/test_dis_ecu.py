@@ -11,8 +11,9 @@ if __name__ == "__main__":
   BUS = 0
   ECU_ADDR = 0x24b
   ADDR_OFFSET = 0x400
-  EXT_DIAG_REQUEST = b"\x02\x10\x03"
-  COM_CONT_REQUEST_DEBUG = b"\x28"
+  EXT_DIAG_REQUEST = b"\x10\x03"
+  COM_CONT_REQUEST = b"\x28\x83\x01"  # only use in prod, this suppresses tester present positive response
+  COM_CONT_REQUEST_DEBUG = b"\x28\x03\x01"
 
   panda = Panda()
   panda.set_safety_mode(Panda.SAFETY_ELM327)
