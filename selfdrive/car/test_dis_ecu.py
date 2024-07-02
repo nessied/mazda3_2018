@@ -12,8 +12,9 @@ if __name__ == "__main__":
   ECU_ADDR = 0x24b
   ADDR_OFFSET = 0x400
   EXT_DIAG_REQUEST = b"\x10\x03"
-  COM_CONT_REQUEST = b"\x28\x83\x01"  # only use in prod, this suppresses tester present positive response
-  COM_CONT_REQUEST_DEBUG = b"\x28\x03\x01"
+  COM_CONT_REQUEST = b"\x28"
+  TESTER_REQUEST = b"\x01\x3E"
+
 
   panda = Panda()
   panda.set_safety_mode(Panda.SAFETY_ELM327)
@@ -21,6 +22,9 @@ if __name__ == "__main__":
   isotp_send(panda, EXT_DIAG_REQUEST, ECU_ADDR, bus=BUS)
   hexdump(isotp_recv(panda, ECU_ADDR + ADDR_OFFSET, bus=BUS))
 
-  isotp_send(panda, COM_CONT_REQUEST_DEBUG, ECU_ADDR, bus=BUS)
+  isotp_send(panda, TESTER_REQUEST, ECU_ADDR, bus=BUS)
+  hexdump(isotp_recv(panda, ECU_ADDR + ADDR_OFFSET, bus=BUS))
+
+  isotp_send(panda, COM_CONT_REQUEST, ECU_ADDR, bus=BUS)
   hexdump(isotp_recv(panda, ECU_ADDR + ADDR_OFFSET, bus=BUS))
   hexdump(isotp_recv(panda, ECU_ADDR + ADDR_OFFSET, bus=BUS))
