@@ -13,7 +13,7 @@ if __name__ == "__main__":
   ADDR_OFFSET = 0x400
   EXT_DIAG_REQUEST = b"\x10\x03"
   COM_CONT_REQUEST = b"\x28"
-  TESTER_REQUEST = b"\x01\x3E"
+  TESTER_REQUEST = b"\x3E"
 
 
   panda = Panda()
