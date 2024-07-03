@@ -1126,8 +1126,8 @@ void FrogPilotControlsPanel::updateCarToggles() {
     hasCommaNNFFSupport = checkCommaNNFFSupport(carFingerprint);
     hasDashSpeedLimits = carName == "hyundai" || carName == "toyota";
     hasNNFFLog = checkNNFFLogFileExists(carFingerprint);
-    hasOpenpilotLongitudinal = hasLongitudinalControl(CP);
-    hasPCMCruise = CP.getPcmCruise();
+    hasOpenpilotLongitudinal = hasLongitudinalControl(CP) || params.getBool("CSLCEnabled");
+    hasPCMCruise = CP.getPcmCruise() && !params.getBool("CSLCEnabled");
     isGM = carName == "gm";
     isHKGCanFd = carName == "hyundai" && safetyModel == cereal::CarParams::SafetyModel::HYUNDAI_CANFD;
     isToyota = carName == "toyota";
