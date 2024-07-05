@@ -8,7 +8,7 @@ from openpilot.common.basedir import BASEDIR
 from openpilot.common.conversions import Conversions as CV
 from openpilot.selfdrive.car import create_button_events, get_safety_config
 from openpilot.selfdrive.car.gm.radar_interface import RADAR_HEADER_MSG
-from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, SDGM_CAR, CanBus
+from openpilot.selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, SDGM_CAR, CanBus, GMFlags
 from openpilot.selfdrive.car.interfaces import CarInterfaceBase, TorqueFromLateralAccelCallbackType, FRICTION_THRESHOLD, LatControlInputs, NanoFFModel
 from openpilot.selfdrive.controls.lib.drive_helpers import get_friction
 
@@ -125,13 +125,24 @@ class CarInterface(CarInterfaceBase):
       ret.experimentalLongitudinalAvailable = False
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.pcmCruise = True
+      ret.openpilotLongitudinalControl = False
       ret.radarUnavailable = True
       ret.minEnableSpeed = -1.  # engage speed is decided by ASCM
       ret.minSteerSpeed = 10 * CV.KPH_TO_MS
-      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
+
+      if 0x2CB not in fingerprint[CanBus.POWERTRAIN]:
+        ret.pcmCruise = False
+        ret.openpilotLongitudinalControl = True
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_SDGM_LONG
+        ret.minEnableSpeed = 5 * CV.KPH_TO_MS
+        ret.stoppingDecelRate = 2.0  # reach brake quickly after enabling
+        ret.vEgoStopping = 0.25
+        ret.vEgoStarting = 0.25
+        ret.flags |= GMFlags.SDGM_LONG.value
+      else:
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
 
       # To make checks pass
-      ret.openpilotLongitudinalControl = False
       ret.longitudinalTuning.kiV = [2.0, 1.5]
 
     else:  # ASCM, OBD-II harness

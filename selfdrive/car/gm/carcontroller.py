@@ -5,7 +5,7 @@ from openpilot.common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_driver_steer_torque_limits
 from openpilot.selfdrive.car.gm import gmcan
-from openpilot.selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons
+from openpilot.selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons, GMFlags
 from openpilot.selfdrive.car.interfaces import CarControllerBase
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -53,7 +53,7 @@ class CarController(CarControllerBase):
     # Steering (Active: 50Hz, inactive: 10Hz)
     steer_step = self.params.STEER_STEP if CC.latActive else self.params.INACTIVE_STEER_STEP
 
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.SDGM_LONG.value:
       # Also send at 50Hz:
       # - on startup, first few msgs are blocked
       # - until we're in sync with camera so counters align when relay closes, preventing a fault.
@@ -108,7 +108,7 @@ class CarController(CarControllerBase):
         # TODO: can we always check the longControlState?
         if self.CP.networkLocation == NetworkLocation.fwdCamera:
           at_full_stop = at_full_stop and stopping
-          friction_brake_bus = CanBus.POWERTRAIN
+          friction_brake_bus = CanBus.CAMERA if self.CP.flags & GMFlags.SDGM_LONG.value else CanBus.POWERTRAIN
 
         # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
@@ -136,7 +136,7 @@ class CarController(CarControllerBase):
           can_sends.append(gmcan.create_adas_steering_status(CanBus.OBSTACLE, idx))
           can_sends.append(gmcan.create_adas_accelerometer_speed_status(CanBus.OBSTACLE, CS.out.vEgo, idx))
 
-      if self.CP.networkLocation == NetworkLocation.gateway and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
+      if (self.CP.networkLocation == NetworkLocation.gateway or self.CP.flags & GMFlags.SDGM_LONG.value) and self.frame % self.params.ADAS_KEEPALIVE_STEP == 0:
         can_sends += gmcan.create_adas_keepalive(CanBus.POWERTRAIN)
 
     else:

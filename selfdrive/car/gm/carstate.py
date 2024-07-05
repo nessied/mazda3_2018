@@ -5,7 +5,7 @@ from openpilot.common.numpy_fast import mean
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from openpilot.selfdrive.car.interfaces import CarStateBase
-from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, SDGM_CAR
+from openpilot.selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, SDGM_CAR, GMFlags
 
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
@@ -48,7 +48,7 @@ class CarState(CarStateBase):
     self.loopback_lka_steering_cmd_updated = len(loopback_cp.vl_all["ASCMLKASteeringCmd"]["RollingCounter"]) > 0
     if self.loopback_lka_steering_cmd_updated:
       self.loopback_lka_steering_cmd_ts_nanos = loopback_cp.ts_nanos["ASCMLKASteeringCmd"]["RollingCounter"]
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.SDGM_LONG.value:
       self.pt_lka_steering_cmd_counter = pt_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
       self.cam_lka_steering_cmd_counter = cam_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
 
@@ -115,7 +115,7 @@ class CarState(CarStateBase):
 
     ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
     ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
-    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and not self.CP.flags & GMFlags.SDGM_LONG.value:
       ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
       if self.CP.carFingerprint not in SDGM_CAR:
         ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
@@ -133,10 +133,11 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     messages = []
     if CP.networkLocation == NetworkLocation.fwdCamera:
-      messages += [
-        ("ASCMLKASteeringCmd", 10),
-        ("ASCMActiveCruiseControlStatus", 25),
-      ]
+      if not CP.flags & GMFlags.SDGM_LONG.value:
+        messages += [
+          ("ASCMLKASteeringCmd", 10),
+          ("ASCMActiveCruiseControlStatus", 25),
+        ]
       if CP.carFingerprint in SDGM_CAR:
         messages += [
           ("BCMTurnSignals", 1),
@@ -185,7 +186,7 @@ class CarState(CarStateBase):
         messages.append(("BCMBlindSpotMonitor", 10))
 
     # Used to read back last counter sent to PT by camera
-    if CP.networkLocation == NetworkLocation.fwdCamera:
+    if CP.networkLocation == NetworkLocation.fwdCamera and not CP.flags & GMFlags.SDGM_LONG.value:
       messages += [
         ("ASCMLKASteeringCmd", 0),
       ]

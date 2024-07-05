@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import IntFlag
 
 from cereal import car
 from openpilot.selfdrive.car import dbc_dict, PlatformConfig, DbcDict, Platforms, CarSpecs
@@ -190,6 +191,8 @@ class CanBus:
   LOOPBACK = 128
   DROPPED = 192
 
+class GMFlags(IntFlag):
+  SDGM_LONG = 1
 
 # In a Data Module, an identifier is a string used to recognize an object,
 # either by itself or together with the identifiers of parent objects.
