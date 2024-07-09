@@ -243,11 +243,6 @@ class CarInterface(CarInterfaceBase):
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     if ret.enableGasInterceptor:
-      ret.networkLocation = NetworkLocation.fwdCamera
-      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
-      ret.minEnableSpeed = -1
-      ret.pcmCruise = False
-      ret.openpilotLongitudinalControl = True
       ret.stoppingControl = True
       ret.autoResumeSng = True
 
@@ -259,11 +254,11 @@ class CarInterface(CarInterfaceBase):
         ret.longitudinalTuning.kiV = [0.0, 0.35, 0.5]
         ret.longitudinalTuning.kf = 0.15
         ret.stoppingDecelRate = 0.8
+        ret.minEnableSpeed = -1
+        ret.pcmCruise = False
+        ret.openpilotLongitudinalControl = True
       else:  # Pedal used for SNG, ACC for longitudinal control otherwise
-        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_LONG
         ret.startingState = True
-        ret.vEgoStopping = 0.25
-        ret.vEgoStarting = 0.25
 
     elif candidate in CC_ONLY_CAR:
       ret.flags |= GMFlags.CC_LONG.value
