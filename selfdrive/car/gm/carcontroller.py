@@ -259,6 +259,11 @@ class CarController(CarControllerBase):
         elif CC.enabled and self.frame % 51 == 0 and CS.cruise_buttons == CruiseButtons.UNPRESS and CS.out.gasPressed and CS.out.cruiseState.speed < CS.out.vEgo < hud_v_cruise and not CS.distance_button:
           can_sends.extend([gmcan.create_buttons(self.packer_pt, bus, (CS.buttons_counter + 1) % 4, CruiseButtons.DECEL_SET)] * (25 if self.CP.carFingerprint in SDGM_CAR else 1))
 
+        if self.frame % 4 == 0:
+          # Send dashboard UI commands (ACC status)
+          send_fcw = hud_alert == VisualAlert.fcw
+          can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled, hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
+
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       # Silence "Take Steering" alert sent by camera, forward PSCMStatus with HandsOffSWlDetectionStatus=1
       if self.frame % 10 == 0:
